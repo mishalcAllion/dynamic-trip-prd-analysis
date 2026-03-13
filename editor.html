@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Editor -- PRD Analysis</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Inter + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Shared scripts (order matters) -->
+  <script src="theme.js"></script>
+  <script src="data.js"></script>
+  <script>window.CURRENT_PAGE = 'editor';</script>
+  <script src="nav.js"></script>
+  <script src="tooltips.js"></script>
+  <script src="editor.js"></script>
+
+  <style>
+    /* Scrollbar styling for dark mode */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* Color input styling */
+    input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+      padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 2px;
+    }
+    input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 4px;
+    }
+
+    /* Checkbox styling */
+    input[type="checkbox"] {
+      accent-color: #3b82f6;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-300 font-sans min-h-screen antialiased">
+
+  <!-- Navigation root (injected by nav.js) -->
+  <div id="nav-root"></div>
+
+  <!-- Main content (offset for sidebar) -->
+  <main class="ml-0 lg:ml-[260px] min-h-screen">
+    <div class="max-w-[1280px] mx-auto px-6 py-8">
+
+      <!-- Page Header -->
+      <div class="mb-6">
+        <h2 class="text-2xl font-semibold text-slate-100 tracking-tight">Data Editor</h2>
+        <p class="text-sm text-slate-500 mt-1">Edit tickets, team, risks. Changes auto-save and reflect on all pages.</p>
+      </div>
+
+      <!-- Tab Bar -->
+      <div id="editor-tabs" class="mb-6">
+        <!-- Rendered by Editor.renderTabBar() -->
+      </div>
+
+      <!-- Content Area -->
+      <div id="editor-content">
+        <!-- Rendered by Editor based on current tab -->
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-[200] flex flex-col gap-2 items-end"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      Editor.init();
+
+      // Sync color input with hex display in team forms
+      document.addEventListener('input', (e) => {
+        if (e.target.type === 'color') {
+          const hexInput = document.getElementById(e.target.id + 'Hex');
+          if (hexInput) hexInput.value = e.target.value;
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

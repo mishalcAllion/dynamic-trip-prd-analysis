@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Capacity &amp; Risk -- PRD Analysis</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>window.CURRENT_PAGE = 'capacity';</script>
+  <script src="theme.js"></script>
+  <script src="data.js"></script>
+  <script src="nav.js"></script>
+  <script src="tooltips.js"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .risk-card { transition: all 0.2s ease; }
+    .risk-card:hover { transform: translateY(-1px); }
+    .risk-details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
+    .risk-details.open { max-height: 500px; opacity: 1; }
+    .dep-node { transition: all 0.15s ease; }
+    .dep-node:hover { transform: scale(1.05); }
+    .arrow-line { position: relative; }
+    .arrow-line::after {
+      content: '';
+      position: absolute;
+      right: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0; height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 6px solid #475569;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-300 min-h-screen">
+
+  <!-- Nav root -->
+  <div id="nav-root"></div>
+
+  <!-- Main content -->
+  <main class="ml-0 lg:ml-[260px] p-6 lg:p-8">
+
+    <!-- Header -->
+    <div class="mb-8">
+      <p class="text-[10px] font-semibold tracking-[0.2em] uppercase text-slate-500 mb-1 font-mono">PRD Analysis</p>
+      <h1 class="text-2xl font-bold text-slate-100">Capacity & Risk</h1>
+      <p class="text-sm text-slate-500 mt-1">Team workload distribution, risk matrix, and dependency critical path for the 5-week delivery window.</p>
+    </div>
+
+    <!-- ==================== WORKLOAD BARS ==================== -->
+    <section class="mb-10">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </div>
+        <div>
+          <h2 class="text-lg font-semibold text-slate-100">Workload Distribution</h2>
+          <p class="text-xs text-slate-500">Points allocated vs. 200 pt capacity (40 hrs/wk x 5 weeks). 1 pt = 1 hr.</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-6" id="workloadBars"></div>
+    </section>
+
+    <!-- ==================== RISK MATRIX ==================== -->
+    <section class="mb-10">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+          <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <div>
+          <h2 class="text-lg font-semibold text-slate-100">Risk Matrix</h2>
+          <p class="text-xs text-slate-500">Impact (Y-axis) vs. Likelihood (X-axis). Click any risk to expand details.</p>
+        </div>
+      </div>
+
+      <!-- 2x2 Grid -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+        <!-- Axis labels + grid -->
+        <div class="p-5">
+          <!-- Y-axis label -->
+          <div class="flex">
+            <div class="flex flex-col justify-between items-center w-8 mr-2 py-2">
+              <span class="text-[9px] text-slate-500 uppercase tracking-wider font-semibold writing-mode-vertical" style="writing-mode: vertical-rl; transform: rotate(180deg);">Impact</span>
+            </div>
+            <div class="flex-1">
+              <!-- Top row: High Impact -->
+              <div class="grid grid-cols-2 gap-2 mb-2">
+                <!-- Top-left: High Impact, Low Likelihood (orange) -->
+                <div class="rounded-lg border border-orange-500/20 bg-orange-500/5 p-3 min-h-[140px]">
+                  <p class="text-[9px] font-semibold uppercase tracking-wider text-orange-400/60 mb-2">High Impact / Low Likelihood</p>
+                  <div id="quadrant-hi-lo" class="space-y-2"></div>
+                </div>
+                <!-- Top-right: High Impact, High Likelihood (red) -->
+                <div class="rounded-lg border border-red-500/20 bg-red-500/5 p-3 min-h-[140px]">
+                  <p class="text-[9px] font-semibold uppercase tracking-wider text-red-400/60 mb-2">High Impact / High Likelihood</p>
+                  <div id="quadrant-hi-hi" class="space-y-2"></div>
+                </div>
+              </div>
+              <!-- Bottom row: Low Impact -->
+              <div class="grid grid-cols-2 gap-2">
+                <!-- Bottom-left: Low Impact, Low Likelihood (green) -->
+                <div class="rounded-lg border border-green-500/20 bg-green-500/5 p-3 min-h-[100px]">
+                  <p class="text-[9px] font-semibold uppercase tracking-wider text-green-400/60 mb-2">Low Impact / Low Likelihood</p>
+                  <div id="quadrant-lo-lo" class="space-y-2"></div>
+                </div>
+                <!-- Bottom-right: Low Impact, High Likelihood (yellow) -->
+                <div class="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-3 min-h-[100px]">
+                  <p class="text-[9px] font-semibold uppercase tracking-wider text-yellow-400/60 mb-2">Low Impact / High Likelihood</p>
+                  <div id="quadrant-lo-hi" class="space-y-2"></div>
+                </div>
+              </div>
+              <!-- X-axis label -->
+              <div class="flex justify-between mt-2 px-2">
+                <span class="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Low Likelihood</span>
+                <span class="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">High Likelihood</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== RISK DETAIL CARDS ==================== -->
+    <section class="mb-10">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        </div>
+        <div>
+          <h2 class="text-lg font-semibold text-slate-100">Risk Register</h2>
+          <p class="text-xs text-slate-500">All identified risks with severity, impact analysis, and mitigation strategies.</p>
+        </div>
+      </div>
+
+      <div class="space-y-3" id="riskCards"></div>
+    </section>
+
+    <!-- ==================== DEPENDENCY GRAPH ==================== -->
+    <section class="mb-10">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+          <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div>
+          <h2 class="text-lg font-semibold text-slate-100">Critical Path Dependencies</h2>
+          <p class="text-xs text-slate-500">Simplified dependency flow. Arrows show blocking relationships.</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 overflow-x-auto" id="depGraph">
+
+        <!-- Legend -->
+        <div class="flex items-center gap-4 mb-6 flex-wrap">
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 rounded-sm bg-blue-500/30 border border-blue-500/50"></div>
+            <span class="text-[10px] text-slate-500">Prerequisite</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 rounded-sm bg-green-500/30 border border-green-500/50"></div>
+            <span class="text-[10px] text-slate-500">Core Feature</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 rounded-sm bg-purple-500/30 border border-purple-500/50"></div>
+            <span class="text-[10px] text-slate-500">Design Gap</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <svg class="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            <span class="text-[10px] text-slate-500">Critical path</span>
+          </div>
+        </div>
+
+        <!-- Main flow: P1 -> P2 -> C3 -> C4 -> C5 -->
+        <div class="space-y-6">
+
+          <!-- Row 1: Critical Path -->
+          <div>
+            <p class="text-[9px] font-semibold uppercase tracking-wider text-red-400/60 mb-3">Critical Path (longest chain)</p>
+            <div class="flex items-center gap-1 flex-wrap">
+              <div class="dep-node px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/30 text-center min-w-[100px]">
+                <span class="font-mono text-xs font-semibold text-blue-400">P1</span>
+                <p class="text-[10px] text-slate-400 mt-0.5">Notion Schema</p>
+              </div>
+              <div class="flex items-center px-1">
+                <svg class="w-5 h-5 text-red-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+              </div>
+              <div class="dep-node px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/30 text-center min-w-[100px]">
+                <span class="font-mono text-xs font-semibold text-blue-400">P2</span>
+                <p class="text-[10px] text-slate-400 mt-0.5">Backend API</p>
+              </div>
+              <div class="flex items-center px-1">
+                <svg class="w-5 h-5 text-red-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+              </div>
+              <div class="dep-node px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/30 text-center min-w-[120px] ring-1 ring-red-500/30">
+                <span class="font-mono text-xs font-semibold text-green-400">C3</span>
+                <p class="text-[10px] text-slate-400 mt-0.5">Itinerary & Cards</p>
+                <p class="text-[9px] text-red-400/70 font-mono mt-0.5">30-40 pts (largest)</p>
+              </div>
+              <div class="flex items-center px-1">
+                <svg class="w-5 h-5 text-red-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+              </div>
+              <div class="dep-node px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/30 text-center min-w-[100px]">
+                <span class="font-mono text-xs font-semibold text-green-400">C4</span>
+                <p class="text-[10px] text-slate-400 mt-0.5">Detail View</p>
+              </div>
+              <div class="flex items-center px-1">
+                <svg class="w-5 h-5 text-red-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+              </div>
+              <div class="dep-node px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/30 text-center min-w-[100px]">
+                <span class="font-mono text-xs font-semibold text-green-400">C5</span>
+                <p class="text-[10px] text-slate-400 mt-0.5">Finalized View</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 2: Branch paths -->
+          <div>
+            <p class="text-[9px] font-semibold uppercase tracking-wider text-slate-500/60 mb-3">Branch Dependencies</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <!-- Branch A: P1 -> P3 -->
+              <div class="flex items-center gap-1">
+                <div class="dep-node px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/30 text-center min-w-[100px]">
+                  <span class="font-mono text-xs font-semibold text-blue-400">P1</span>
+                  <p class="text-[10px] text-slate-400 mt-0.5">Notion Schema</p>
+                </div>
+                <div class="flex items-center px-1">
+                  <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </div>
+                <div class="dep-node px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/30 text-center min-w-[100px]">
+                  <span class="font-mono text-xs font-semibold text-blue-400">P3</span>
+                  <p class="text-[10px] text-slate-400 mt-0.5">Task Dashboard</p>
+                </div>
+              </div>
+
+              <!-- Branch B: P2 -> P4 -> C1/C2 -->
+              <div class="flex items-center gap-1">
+                <div class="dep-node px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/30 text-center min-w-[100px]">
+                  <span class="font-mono text-xs font-semibold text-blue-400">P2</span>
+                  <p class="text-[10px] text-slate-400 mt-0.5">Backend API</p>
+                </div>
+                <div class="flex items-center px-1">
+                  <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </div>
+                <div class="dep-node px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/30 text-center min-w-[100px]">
+                  <span class="font-mono text-xs font-semibold text-blue-400">P4</span>
+                  <p class="text-[10px] text-slate-400 mt-0.5">Phase Logic</p>
+                </div>
+                <div class="flex items-center px-1">
+                  <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <div class="dep-node px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+                    <span class="font-mono text-[11px] font-semibold text-green-400">C1</span>
+                    <span class="text-[9px] text-slate-500 ml-1">Header</span>
+                  </div>
+                  <div class="dep-node px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+                    <span class="font-mono text-[11px] font-semibold text-green-400">C2</span>
+                    <span class="text-[9px] text-slate-500 ml-1">Timeline</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3: Design blocker -->
+          <div>
+            <p class="text-[9px] font-semibold uppercase tracking-wider text-purple-400/60 mb-3">Design Blocker (blocks all UI)</p>
+            <div class="flex items-center gap-1 flex-wrap">
+              <div class="dep-node px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30 text-center min-w-[120px] ring-1 ring-red-500/30">
+                <span class="font-mono text-xs font-semibold text-purple-400">G3</span>
+                <p class="text-[10px] text-slate-400 mt-0.5">Full Design Pass</p>
+                <p class="text-[9px] text-red-400/70 font-mono mt-0.5">BLOCKER</p>
+              </div>
+              <div class="flex items-center px-1">
+                <svg class="w-5 h-5 text-red-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+              </div>
+              <div class="flex gap-1.5 flex-wrap">
+                <div class="dep-node px-2.5 py-1.5 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+                  <span class="font-mono text-[11px] font-semibold text-green-400">C1</span>
+                </div>
+                <div class="dep-node px-2.5 py-1.5 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+                  <span class="font-mono text-[11px] font-semibold text-green-400">C2</span>
+                </div>
+                <div class="dep-node px-2.5 py-1.5 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+                  <span class="font-mono text-[11px] font-semibold text-green-400">C3</span>
+                </div>
+                <div class="dep-node px-2.5 py-1.5 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+                  <span class="font-mono text-[11px] font-semibold text-green-400">C4</span>
+                </div>
+                <div class="dep-node px-2.5 py-1.5 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+                  <span class="font-mono text-[11px] font-semibold text-green-400">C5</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // ---- State ----
+    let expandedRiskId = null;
+    const TOTAL_WEEKS = DATA.meta.totalWeeks || 5;
+    const WEEKLY_CAPACITY = 40; // 1pt = 1hr, 40hrs/week
+    const TOTAL_CAPACITY = WEEKLY_CAPACITY * TOTAL_WEEKS; // 200 pts
+
+    // ---- Risk classification helper ----
+    function classifyRisk(risk) {
+      // Map severity to impact: critical/high = high impact, medium/low = low impact
+      const highImpact = (risk.severity === 'critical' || risk.severity === 'high');
+      // Map likelihood directly
+      const highLikelihood = (risk.likelihood === 'high' || risk.likelihood === 'very-high');
+      return { highImpact, highLikelihood };
+    }
+
+    function likelihoodBadge(likelihood) {
+      const map = {
+        high: 'bg-red-500/10 text-red-400 border-red-500/30',
+        medium: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+        low: 'bg-green-500/10 text-green-400 border-green-500/30',
+      };
+      return `<span class="inline-flex px-2 py-0.5 rounded text-xs font-mono border ${map[likelihood] || map.medium}">${likelihood}</span>`;
+    }
+
+    // ---- Render Workload Bars ----
+    function renderWorkloadBars() {
+      const container = document.getElementById('workloadBars');
+      const members = DATA.team.filter(m => !(m.id === 'thilini' && m.pointsMax === 0));
+
+      container.innerHTML = members.map(m => {
+        const pctMin = Math.min((m.pointsMin / TOTAL_CAPACITY) * 100, 100);
+        const pctMax = Math.min((m.pointsMax / TOTAL_CAPACITY) * 100, 100);
+        const isOver = m.pointsMax > TOTAL_CAPACITY;
+        const capacityPct = 100; // The bar is scaled to TOTAL_CAPACITY
+
+        let badges = '';
+        if (m.isBottleneck) {
+          badges += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/20">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            BOTTLENECK</span>`;
+        }
+        if (m.isHighestRisk) {
+          badges += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            HIGHEST RISK</span>`;
+        }
+
+        return `
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-2.5 h-2.5 rounded-full shrink-0" style="background: ${m.color}"></div>
+                <span class="text-sm font-medium text-slate-200">${Theme.escapeHtml(m.name)}</span>
+                <span class="text-[10px] text-slate-500 bg-slate-800 px-2 py-0.5 rounded">${Theme.escapeHtml(m.role)}</span>
+                ${badges}
+              </div>
+              <span class="text-xs font-mono text-slate-400">${m.pointsMin}-${m.pointsMax} pts / ${TOTAL_CAPACITY} pts capacity (${TOTAL_WEEKS} weeks)</span>
+            </div>
+            <div class="relative w-full h-6 bg-slate-800 rounded-lg overflow-visible">
+              <!-- Min bar (solid) -->
+              <div class="absolute inset-y-0 left-0 rounded-lg transition-all duration-500" style="width: ${pctMin}%; background: ${m.color}40;"></div>
+              <!-- Max bar (lighter, extends from min to max) -->
+              <div class="absolute inset-y-0 left-0 rounded-lg transition-all duration-500" style="width: ${pctMax}%; background: ${m.color}25; border-right: 2px solid ${m.color}80;"></div>
+              <!-- Min marker line -->
+              <div class="absolute inset-y-0 transition-all duration-500" style="left: ${pctMin}%; width: 2px; background: ${m.color}90;"></div>
+              <!-- Capacity line (dotted) at 100% -->
+              <div class="absolute inset-y-0 right-0 border-r-2 border-dashed border-slate-500/50" style="left: ${capacityPct}%;"></div>
+              <!-- Point labels inside bar -->
+              <div class="absolute inset-0 flex items-center px-3">
+                <span class="text-[10px] font-mono font-semibold" style="color: ${m.color}">${m.pointsMin}-${m.pointsMax}</span>
+              </div>
+              <!-- Capacity label -->
+              <div class="absolute -right-0 -top-5">
+                <span class="text-[9px] font-mono text-slate-500">${TOTAL_CAPACITY}</span>
+              </div>
+            </div>
+            <!-- Utilization percentage -->
+            <div class="flex justify-between text-[10px]">
+              <span class="text-slate-500">Utilization: <span class="font-mono" style="color: ${m.color}">${Math.round(pctMin)}-${Math.round(pctMax)}%</span></span>
+              <span class="text-slate-600">${m.pointsMax > TOTAL_CAPACITY * 0.8 ? 'At or near capacity' : 'Within safe range'}</span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ---- Render Risk Matrix ----
+    function renderRiskMatrix() {
+      const quadrants = { 'hi-hi': [], 'hi-lo': [], 'lo-hi': [], 'lo-lo': [] };
+
+      DATA.risks.forEach(risk => {
+        const { highImpact, highLikelihood } = classifyRisk(risk);
+        const key = `${highImpact ? 'hi' : 'lo'}-${highLikelihood ? 'hi' : 'lo'}`;
+        quadrants[key].push(risk);
+      });
+
+      Object.entries(quadrants).forEach(([key, risks]) => {
+        const el = document.getElementById(`quadrant-${key}`);
+        if (!el) return;
+        el.innerHTML = risks.map(r => `
+          <div class="risk-card px-2.5 py-1.5 rounded bg-slate-900/60 border border-slate-700/50 cursor-pointer hover:border-slate-600 flex items-center gap-2" onclick="toggleRisk('${r.id}')">
+            <span class="font-mono text-[10px] font-semibold text-slate-400">${r.id}</span>
+            <span class="text-[11px] text-slate-300 flex-1 truncate">${Theme.escapeHtml(r.title)}</span>
+            ${Theme.severityBadge(r.severity)}
+          </div>
+        `).join('');
+      });
+    }
+
+    // ---- Render Risk Cards ----
+    function renderRiskCards() {
+      const container = document.getElementById('riskCards');
+      container.innerHTML = DATA.risks.map(r => {
+        const isExpanded = expandedRiskId === r.id;
+        return `
+          <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden risk-card">
+            <div class="px-5 py-3.5 flex items-center gap-3 cursor-pointer hover:bg-slate-800/30 transition-colors" onclick="toggleRisk('${r.id}')">
+              <span class="font-mono text-xs font-semibold text-slate-400 bg-slate-800 px-2 py-0.5 rounded">${r.id}</span>
+              <span class="text-sm font-medium text-slate-200 flex-1">${Theme.escapeHtml(r.title)}</span>
+              ${Theme.severityBadge(r.severity)}
+              ${likelihoodBadge(r.likelihood)}
+              <svg class="w-4 h-4 text-slate-600 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+            <div class="risk-details ${isExpanded ? 'open' : ''}">
+              <div class="px-5 pb-4 space-y-3">
+                <!-- Impact -->
+                <div class="p-3 rounded-lg bg-red-500/5 border border-red-500/15">
+                  <div class="flex items-start gap-2">
+                    <svg class="w-4 h-4 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <div>
+                      <p class="text-[10px] font-semibold uppercase tracking-wider text-red-400 mb-1">Impact</p>
+                      <p class="text-xs text-red-300/80 leading-relaxed">${Theme.escapeHtml(r.impact)}</p>
+                    </div>
+                  </div>
+                </div>
+                <!-- Mitigation -->
+                <div class="p-3 rounded-lg bg-green-500/5 border border-green-500/15">
+                  <div class="flex items-start gap-2">
+                    <svg class="w-4 h-4 text-green-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <div>
+                      <p class="text-[10px] font-semibold uppercase tracking-wider text-green-400 mb-1">Mitigation</p>
+                      <p class="text-xs text-green-300/80 leading-relaxed">${Theme.escapeHtml(r.mitigation)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ---- Toggle risk ----
+    function toggleRisk(riskId) {
+      expandedRiskId = expandedRiskId === riskId ? null : riskId;
+      renderRiskCards();
+      // Also update matrix highlighting if needed
+    }
+
+    // ---- Main render ----
+    function render() {
+      renderWorkloadBars();
+      renderRiskMatrix();
+      renderRiskCards();
+    }
+
+    // ---- Init ----
+    document.addEventListener('DOMContentLoaded', render);
+  </script>
+
+</body>
+</html>

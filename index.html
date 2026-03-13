@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overview -- PRD Analysis</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Inter + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Shared scripts (order matters) -->
+  <script src="theme.js"></script>
+  <script src="data.js"></script>
+  <script>window.CURRENT_PAGE = 'overview';</script>
+  <script src="nav.js"></script>
+  <script src="tooltips.js"></script>
+
+  <style>
+    /* Scrollbar styling for dark mode */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* Sprint timeline animation */
+    @keyframes pulse-line {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .today-marker { animation: pulse-line 2s ease-in-out infinite; }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-300 font-sans min-h-screen antialiased">
+
+  <!-- Navigation root (injected by nav.js) -->
+  <div id="nav-root"></div>
+
+  <!-- Main content (offset for sidebar) -->
+  <main class="ml-0 lg:ml-[260px] min-h-screen">
+    <div class="max-w-[1280px] mx-auto px-6 py-8 pt-14 lg:pt-8">
+
+      <!-- Page title area -->
+      <div id="page-header" class="mb-8">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Stat cards row -->
+      <div id="stat-cards" class="mb-8">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Two-column layout: Feature Scope + Team Assignments -->
+      <div id="two-col" class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+        <!-- Left: Feature scope summary -->
+        <div id="feature-scope">
+          <!-- Rendered by JS -->
+        </div>
+        <!-- Right: Team assignment cards -->
+        <div id="team-assignments">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Sprint timeline -->
+      <div id="sprint-timeline" class="mb-8">
+        <!-- Rendered by JS -->
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // =========================================================================
+    // Page rendering -- all data from global DATA object (loaded by data.js)
+    // =========================================================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderHeader();
+      renderStatCards();
+      renderFeatureScope();
+      renderTeamAssignments();
+      renderSprintTimeline();
+    });
+
+    // ---- Page Header ----
+    function renderHeader() {
+      const el = document.getElementById('page-header');
+      el.innerHTML = `
+        <div>
+          <h2 class="text-2xl font-semibold text-slate-100 tracking-tight">Overview</h2>
+          <p class="text-sm text-slate-500 mt-1">Dynamic Trip Page PRD Analysis</p>
+        </div>
+      `;
+    }
+
+    // ---- Stat Cards ----
+    function renderStatCards() {
+      const c = DATA.computed;
+      const cards = [
+        {
+          label: 'Total Points',
+          value: `${c.totalPointsMin}-${c.totalPointsMax}`,
+          suffix: 'pts',
+          color: 'text-slate-100',
+          border: 'border-slate-800',
+        },
+        {
+          label: 'Parent Tickets',
+          value: `${c.totalParentTickets}`,
+          suffix: '',
+          color: 'text-slate-100',
+          border: 'border-slate-800',
+        },
+        {
+          label: 'Sub-issues',
+          value: `~${c.totalSubIssues}`,
+          suffix: '',
+          color: 'text-slate-100',
+          border: 'border-slate-800',
+        },
+        {
+          label: 'MVP Points',
+          value: `${c.mvpPointsMin}-${c.mvpPointsMax}`,
+          suffix: 'pts',
+          color: 'text-green-400',
+          border: 'border-green-500/20',
+        },
+        {
+          label: 'Fast-Follow Points',
+          value: `${c.fastFollowPointsMin}-${c.fastFollowPointsMax}`,
+          suffix: 'pts',
+          color: 'text-amber-400',
+          border: 'border-amber-500/20',
+        },
+      ];
+
+      const el = document.getElementById('stat-cards');
+      el.innerHTML = `
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          ${cards.map(card => `
+            <div class="bg-slate-900 border ${card.border} rounded-lg p-4 hover:border-slate-700 transition-colors">
+              <div class="font-mono text-2xl font-semibold ${card.color} leading-tight">
+                ${card.value}${card.suffix ? `<span class="text-xs text-slate-500 font-normal ml-1">${card.suffix}</span>` : ''}
+              </div>
+              <div class="text-xs text-slate-500 mt-1.5 uppercase tracking-wider font-medium">${card.label}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // ---- Feature Scope Summary (Left Column) ----
+    function renderFeatureScope() {
+      const el = document.getElementById('feature-scope');
+
+      const groupCards = DATA.groups.map(group => {
+        const gc = Theme.groupColor(group.id);
+        const tickets = DATA.tickets.filter(t => t.group === group.id);
+        const totalMin = tickets.reduce((s, t) => s + t.pointsMin, 0);
+        const totalMax = tickets.reduce((s, t) => s + t.pointsMax, 0);
+        const ticketCount = tickets.length;
+
+        const ticketList = tickets.map(t => {
+          const title = t.title.length > 42 ? t.title.substring(0, 42) + '...' : t.title;
+          return `
+            <div class="flex items-center gap-2 py-1.5 border-b border-slate-800/50 last:border-b-0">
+              <span class="font-mono text-xs ${gc.text} shrink-0 w-7">${t.id}</span>
+              <span class="text-xs text-slate-400 truncate">${Theme.escapeHtml(title)}</span>
+              <span class="ml-auto font-mono text-[11px] text-slate-600 shrink-0">${t.pointsMin}-${t.pointsMax}</span>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 hover:border-slate-700 transition-colors">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full ${gc.dot}"></span>
+                <span class="text-sm font-medium text-slate-200">${group.label}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-xs text-slate-500">${ticketCount} ticket${ticketCount !== 1 ? 's' : ''}</span>
+                <span class="font-mono text-xs ${gc.text}">${Theme.points(totalMin, totalMax)}</span>
+              </div>
+            </div>
+            <div class="space-y-0">
+              ${ticketList}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      el.innerHTML = `
+        <div>
+          <h3 class="text-sm font-semibold text-slate-100 uppercase tracking-wider mb-4">Feature Scope</h3>
+          <div class="space-y-4">
+            ${groupCards}
+          </div>
+        </div>
+      `;
+    }
+
+    // ---- Team Assignment Cards (Right Column) ----
+    function renderTeamAssignments() {
+      const el = document.getElementById('team-assignments');
+
+      // Determine max points across team for relative bar sizing
+      const maxPoints = Math.max(...DATA.team.map(m => m.pointsMax), 1);
+
+      const memberCards = DATA.team.map(member => {
+        const barMinPct = Math.round((member.pointsMin / maxPoints) * 100);
+        const barMaxPct = Math.round((member.pointsMax / maxPoints) * 100);
+        const weeklyLoad = member.pointsMax > 0
+          ? Math.round(member.pointsMax / DATA.meta.totalWeeks * 10) / 10
+          : 0;
+        const capacityPct = member.weeklyCapacity > 0
+          ? Math.round((weeklyLoad / member.weeklyCapacity) * 100)
+          : 0;
+
+        // Determine load color
+        let loadColor = 'text-green-400';
+        let barColor = member.color;
+        if (capacityPct > 90) loadColor = 'text-red-400';
+        else if (capacityPct > 70) loadColor = 'text-amber-400';
+
+        const badges = [];
+        if (member.isBottleneck) {
+          badges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">Bottleneck</span>`);
+        }
+        if (member.isHighestRisk) {
+          badges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-red-500/10 text-red-400 border border-red-500/20">Highest Risk</span>`);
+        }
+
+        return `
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 hover:border-slate-700 transition-colors">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full shrink-0" style="background: ${member.color}"></span>
+                  <span class="text-sm font-medium text-slate-200">${Theme.escapeHtml(member.name)}</span>
+                </div>
+                <div class="text-xs text-slate-500 mt-0.5 ml-4">${Theme.escapeHtml(member.role)}</div>
+              </div>
+              <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                ${badges.join('')}
+              </div>
+            </div>
+
+            <!-- Focus area -->
+            <div class="text-xs text-slate-400 mb-3 leading-relaxed ml-4">${Theme.escapeHtml(member.focus)}</div>
+
+            <!-- Points bar -->
+            <div class="ml-4">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="font-mono text-xs text-slate-300">${Theme.points(member.pointsMin, member.pointsMax)}</span>
+                ${member.pointsMax > 0 ? `<span class="font-mono text-[11px] ${loadColor}">${weeklyLoad} pts/wk (${capacityPct}%)</span>` : `<span class="text-[11px] text-slate-600">N/A</span>`}
+              </div>
+              <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden relative">
+                ${member.pointsMax > 0 ? `
+                  <!-- Max range (lighter) -->
+                  <div class="absolute inset-y-0 left-0 rounded-full opacity-30" style="width: ${barMaxPct}%; background: ${member.color}"></div>
+                  <!-- Min range (solid) -->
+                  <div class="absolute inset-y-0 left-0 rounded-full" style="width: ${barMinPct}%; background: ${member.color}"></div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      el.innerHTML = `
+        <div>
+          <h3 class="text-sm font-semibold text-slate-100 uppercase tracking-wider mb-4">Team Assignments</h3>
+          <div class="space-y-4">
+            ${memberCards}
+          </div>
+        </div>
+      `;
+    }
+
+    // ---- Sprint Timeline ----
+    function renderSprintTimeline() {
+      const el = document.getElementById('sprint-timeline');
+
+      const startDate = new Date(DATA.meta.startDate + 'T00:00:00');
+      const shipDate = new Date(DATA.meta.shipDate + 'T00:00:00');
+      // Extend timeline a few days past the last sprint for visual space
+      const lastSprint = DATA.sprints[DATA.sprints.length - 1];
+      const endDate = new Date(lastSprint.end + 'T00:00:00');
+      const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayOffset = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24));
+      const todayPct = Math.max(0, Math.min(100, (todayOffset / totalDays) * 100));
+      const todayInRange = todayOffset >= 0 && todayOffset <= totalDays;
+
+      const shipOffset = Math.ceil((shipDate - startDate) / (1000 * 60 * 60 * 24));
+      const shipPct = Math.max(0, Math.min(100, (shipOffset / totalDays) * 100));
+
+      // Build sprint bands
+      const sprintBands = DATA.sprints.map((sprint, i) => {
+        const sStart = new Date(sprint.start + 'T00:00:00');
+        const sEnd = new Date(sprint.end + 'T00:00:00');
+        const leftDays = Math.ceil((sStart - startDate) / (1000 * 60 * 60 * 24));
+        const widthDays = Math.ceil((sEnd - sStart) / (1000 * 60 * 60 * 24));
+        const leftPct = (leftDays / totalDays) * 100;
+        const widthPct = (widthDays / totalDays) * 100;
+
+        // Alternate slightly different opacities for visual separation
+        const bgOpacity = i % 2 === 0 ? 'bg-slate-800/40' : 'bg-slate-800/20';
+
+        return `
+          <div class="absolute top-0 bottom-0 ${bgOpacity} border-r border-slate-700/50" style="left: ${leftPct}%; width: ${widthPct}%;">
+            <div class="absolute top-2 left-3 text-[11px] font-mono text-slate-500">${sprint.name}</div>
+            <div class="absolute bottom-2 left-3 text-[10px] text-slate-600">${Theme.formatDate(sprint.start)} - ${Theme.formatDate(sprint.end)}</div>
+          </div>
+        `;
+      }).join('');
+
+      // Ship date marker
+      const shipMarker = `
+        <div class="absolute top-0 bottom-0 w-px bg-red-500/70" style="left: ${shipPct}%;">
+          <div class="absolute -top-0.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded text-[10px] font-mono font-semibold text-red-400 bg-red-500/10 border border-red-500/20 whitespace-nowrap">
+            Ship ${Theme.formatDate(DATA.meta.shipDate)}
+          </div>
+        </div>
+      `;
+
+      // Today marker
+      const todayMarker = todayInRange ? `
+        <div class="absolute top-0 bottom-0 w-0.5 bg-blue-400 today-marker" style="left: ${todayPct}%;">
+          <div class="absolute bottom-[-1px] left-1/2 -translate-x-1/2 px-2 py-0.5 rounded text-[10px] font-mono font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 whitespace-nowrap">
+            Today
+          </div>
+        </div>
+      ` : '';
+
+      el.innerHTML = `
+        <div>
+          <h3 class="text-sm font-semibold text-slate-100 uppercase tracking-wider mb-4">Sprint Timeline</h3>
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 hover:border-slate-700 transition-colors">
+            <div class="relative h-20 rounded-md overflow-visible bg-slate-950 border border-slate-800">
+              ${sprintBands}
+              ${shipMarker}
+              ${todayMarker}
+            </div>
+            <!-- Legend -->
+            <div class="flex items-center gap-6 mt-3 text-[11px] text-slate-500">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3 h-0.5 bg-red-500/70 inline-block"></span>
+                Ship date
+              </div>
+              ${todayInRange ? `
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3 h-0.5 bg-blue-400 inline-block"></span>
+                  Today
+                </div>
+              ` : ''}
+              <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 bg-slate-800/40 border border-slate-700/50 rounded-sm inline-block"></span>
+                Sprint band
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  </script>
+
+</body>
+</html>

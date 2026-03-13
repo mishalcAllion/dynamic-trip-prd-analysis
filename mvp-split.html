@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MVP vs Fast-Follow -- PRD Analysis</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>window.CURRENT_PAGE = 'mvp-split';</script>
+  <script src="theme.js"></script>
+  <script src="data.js"></script>
+  <script src="nav.js"></script>
+  <script src="tooltips.js"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .impact-panel { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
+    .impact-panel.open { max-height: 600px; opacity: 1; }
+    .ticket-row { cursor: pointer; transition: background 0.15s ease; }
+    .ticket-row:hover { background: rgba(255,255,255,0.03); }
+    .ticket-row.active { background: rgba(255,255,255,0.05); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-300 min-h-screen">
+
+  <!-- Nav root -->
+  <div id="nav-root"></div>
+
+  <!-- Main content -->
+  <main class="ml-0 lg:ml-[260px] p-6 lg:p-8">
+
+    <!-- Header -->
+    <div class="mb-8">
+      <p class="text-[10px] font-semibold tracking-[0.2em] uppercase text-slate-500 mb-1 font-mono">PRD Analysis</p>
+      <h1 class="text-2xl font-bold text-slate-100">MVP vs Fast-Follow</h1>
+      <p class="text-sm text-slate-500 mt-1">Scope split for the Dynamic Trip Page feature. Core/MVP tickets ship by <span class="text-red-400 font-mono" id="shipDate"></span>. Fast-Follow ships post-deadline.</p>
+    </div>
+
+    <!-- Two Columns -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8" id="columnsContainer">
+      <!-- LEFT: Core/MVP -->
+      <div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <!-- Green-tinted header -->
+          <div class="px-5 py-4 border-b border-green-500/20 bg-green-500/5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                <h2 class="text-base font-semibold text-green-400">Core / MVP</h2>
+              </div>
+              <span class="text-xs font-mono text-green-400/70" id="mvpCount"></span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Must ship by deadline. Click any ticket to see removal impact.</p>
+          </div>
+
+          <!-- Ticket list -->
+          <div id="mvpList" class="divide-y divide-slate-800/50"></div>
+
+          <!-- Total bar -->
+          <div class="px-5 py-3 border-t border-slate-800 bg-slate-900/80 flex items-center justify-between">
+            <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Total Core/MVP</span>
+            <span class="text-sm font-mono font-semibold text-green-400" id="mvpTotal"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Fast-Follow -->
+      <div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <!-- Amber-tinted header -->
+          <div class="px-5 py-4 border-b border-amber-500/20 bg-amber-500/5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                <h2 class="text-base font-semibold text-amber-400">Fast-Follow</h2>
+              </div>
+              <span class="text-xs font-mono text-amber-400/70" id="ffCount"></span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Post-deadline. Not blocking any Core work.</p>
+          </div>
+
+          <!-- Ticket list -->
+          <div id="ffList" class="divide-y divide-slate-800/50"></div>
+
+          <!-- Total bar -->
+          <div class="px-5 py-3 border-t border-slate-800 bg-slate-900/80 flex items-center justify-between">
+            <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Total Fast-Follow</span>
+            <span class="text-sm font-mono font-semibold text-amber-400" id="ffTotal"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Bar -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-4">Scope Comparison</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Core -->
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 uppercase tracking-wider">Core / MVP</p>
+            <p class="text-lg font-mono font-bold text-green-400" id="summaryMvp"></p>
+          </div>
+        </div>
+        <!-- Fast-Follow -->
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 uppercase tracking-wider">Fast-Follow</p>
+            <p class="text-lg font-mono font-bold text-amber-400" id="summaryFf"></p>
+          </div>
+        </div>
+        <!-- Grand total -->
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center">
+            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 uppercase tracking-wider">Grand Total</p>
+            <p class="text-lg font-mono font-bold text-slate-200" id="summaryTotal"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual bar comparison -->
+      <div class="mt-6 space-y-3">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-slate-500">Core / MVP</span>
+            <span class="text-xs font-mono text-slate-400" id="barMvpLabel"></span>
+          </div>
+          <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+            <div class="h-full bg-green-500/60 rounded-full transition-all duration-500" id="barMvp"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-slate-500">Fast-Follow</span>
+            <span class="text-xs font-mono text-slate-400" id="barFfLabel"></span>
+          </div>
+          <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+            <div class="h-full bg-amber-500/60 rounded-full transition-all duration-500" id="barFf"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // ---- State ----
+    let expandedTicketId = null;
+
+    // ---- Render helpers ----
+
+    function groupDot(groupId) {
+      const gc = Theme.groupColor(groupId);
+      return `<span class="w-2 h-2 rounded-full ${gc.dot} shrink-0"></span>`;
+    }
+
+    function ticketIdBadge(id, groupId) {
+      const gc = Theme.groupColor(groupId);
+      return `<span class="font-mono text-xs font-semibold ${gc.text}">${id}</span>`;
+    }
+
+    function renderBadges(ticket) {
+      let html = '';
+      if (ticket.prdRef) html += prdBadge(ticket.prdRef);
+      if (ticket.figmaRef) html += figmaBadge(ticket.figmaRef);
+      return html;
+    }
+
+    function renderBlockedList(ticket) {
+      if (!ticket.blocksTickets || ticket.blocksTickets.length === 0) return '';
+      const items = ticket.blocksTickets.map(bid => {
+        const blocked = DATA.tickets.find(t => t.id === bid);
+        if (!blocked) return `<span class="font-mono text-xs text-slate-400">${bid}</span>`;
+        const gc = Theme.groupColor(blocked.group);
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono ${gc.bg} ${gc.text} border ${gc.border}">${bid} <span class="text-slate-500 font-sans text-[10px]">${Theme.escapeHtml(blocked.title)}</span></span>`;
+      });
+      return `
+        <div class="mt-3 pt-3 border-t border-red-500/10">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">Removing this would affect:</p>
+          <div class="flex flex-wrap gap-1.5">${items.join('')}</div>
+        </div>`;
+    }
+
+    function renderMvpTicket(ticket) {
+      const isExpanded = expandedTicketId === ticket.id;
+      const gc = Theme.groupColor(ticket.group);
+      const hasImpact = ticket.impactIfRemoved || (ticket.blocksTickets && ticket.blocksTickets.length > 0);
+
+      let html = `
+        <div class="ticket-row ${isExpanded ? 'active' : ''}" onclick="toggleImpact('${ticket.id}')">
+          <div class="px-5 py-3 flex items-center gap-3">
+            ${groupDot(ticket.group)}
+            ${ticketIdBadge(ticket.id, ticket.group)}
+            <span class="text-sm text-slate-200 flex-1 truncate">${Theme.escapeHtml(ticket.title)}</span>
+            <span class="text-xs font-mono text-slate-500 shrink-0">${Theme.points(ticket.pointsMin, ticket.pointsMax)}</span>
+            <span class="shrink-0">${Theme.assigneeBadge(ticket.assignee)}</span>
+            <span class="shrink-0 flex gap-1">${renderBadges(ticket)}</span>
+            ${hasImpact ? `<svg class="w-4 h-4 text-slate-600 shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>` : '<div class="w-4"></div>'}
+          </div>
+        </div>
+        <div class="impact-panel ${isExpanded ? 'open' : ''}" id="impact-${ticket.id}">
+          ${hasImpact ? `
+          <div class="mx-5 mb-3 p-3 rounded-lg bg-red-500/5 border border-red-500/15">
+            ${ticket.impactIfRemoved ? `
+            <div class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              <div>
+                <p class="text-xs font-semibold text-red-400 mb-1">Impact if removed</p>
+                <p class="text-xs text-red-300/80 leading-relaxed">${Theme.escapeHtml(ticket.impactIfRemoved)}</p>
+              </div>
+            </div>` : ''}
+            ${renderBlockedList(ticket)}
+          </div>` : ''}
+        </div>`;
+      return html;
+    }
+
+    function renderFfTicket(ticket) {
+      const gc = Theme.groupColor(ticket.group);
+      return `
+        <div class="px-5 py-3">
+          <div class="flex items-center gap-3">
+            ${groupDot(ticket.group)}
+            ${ticketIdBadge(ticket.id, ticket.group)}
+            <span class="text-sm text-slate-200 flex-1 truncate">${Theme.escapeHtml(ticket.title)}</span>
+            <span class="text-xs font-mono text-slate-500 shrink-0">${Theme.points(ticket.pointsMin, ticket.pointsMax)}</span>
+            <span class="shrink-0">${Theme.assigneeBadge(ticket.assignee)}</span>
+          </div>
+          <div class="ml-5 mt-1.5 flex items-center gap-1.5">
+            <svg class="w-3 h-3 text-amber-500/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="text-[11px] text-slate-500 italic">Post-deadline. Not blocking any Core work.</span>
+          </div>
+        </div>`;
+    }
+
+    // ---- Toggle ----
+    function toggleImpact(ticketId) {
+      if (expandedTicketId === ticketId) {
+        expandedTicketId = null;
+      } else {
+        expandedTicketId = ticketId;
+      }
+      render();
+    }
+
+    // ---- Main render ----
+    function render() {
+      const mvpTickets = DATA.tickets.filter(t => t.isMvp);
+      const ffTickets = DATA.tickets.filter(t => !t.isMvp);
+
+      // Ship date
+      document.getElementById('shipDate').textContent = Theme.formatDate(DATA.meta.shipDate);
+
+      // MVP list
+      let mvpMin = 0, mvpMax = 0;
+      const mvpHtml = mvpTickets.map(t => {
+        mvpMin += t.pointsMin;
+        mvpMax += t.pointsMax;
+        return renderMvpTicket(t);
+      }).join('');
+      document.getElementById('mvpList').innerHTML = mvpHtml;
+      document.getElementById('mvpCount').textContent = `${mvpTickets.length} tickets`;
+      document.getElementById('mvpTotal').textContent = Theme.points(mvpMin, mvpMax);
+
+      // FF list
+      let ffMin = 0, ffMax = 0;
+      const ffHtml = ffTickets.map(t => {
+        ffMin += t.pointsMin;
+        ffMax += t.pointsMax;
+        return renderFfTicket(t);
+      }).join('');
+      document.getElementById('ffList').innerHTML = ffHtml;
+      document.getElementById('ffCount').textContent = `${ffTickets.length} tickets`;
+      document.getElementById('ffTotal').textContent = Theme.points(ffMin, ffMax);
+
+      // Summary bar
+      const totalMin = mvpMin + ffMin;
+      const totalMax = mvpMax + ffMax;
+      document.getElementById('summaryMvp').textContent = Theme.points(mvpMin, mvpMax);
+      document.getElementById('summaryFf').textContent = Theme.points(ffMin, ffMax);
+      document.getElementById('summaryTotal').textContent = Theme.points(totalMin, totalMax);
+
+      // Visual bars (use max values for proportion)
+      const mvpPct = totalMax > 0 ? (mvpMax / totalMax * 100) : 0;
+      const ffPct = totalMax > 0 ? (ffMax / totalMax * 100) : 0;
+      document.getElementById('barMvp').style.width = mvpPct + '%';
+      document.getElementById('barFf').style.width = ffPct + '%';
+      document.getElementById('barMvpLabel').textContent = Math.round(mvpPct) + '% of total';
+      document.getElementById('barFfLabel').textContent = Math.round(ffPct) + '% of total';
+    }
+
+    // ---- Init ----
+    document.addEventListener('DOMContentLoaded', render);
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeline & Gantt Chart - PRD Analysis</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Inter + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Shared scripts (order matters) -->
+  <script src="theme.js"></script>
+  <script src="data.js"></script>
+  <script src="nav.js"></script>
+  <script src="tooltips.js"></script>
+  <script src="charts.js"></script>
+
+  <script>
+    window.CURRENT_PAGE = 'timeline';
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #020617; /* slate-950 */
+    }
+    .font-mono, code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+    /* Smooth transitions for toggles */
+    .toggle-track {
+      transition: background-color 200ms ease;
+    }
+    .toggle-thumb {
+      transition: transform 200ms ease;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen">
+
+  <!-- Navigation sidebar -->
+  <div id="nav-root"></div>
+
+  <!-- Main content -->
+  <main class="ml-0 lg:ml-[260px] p-6 lg:p-8 min-h-screen">
+
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-2xl font-semibold text-slate-100 tracking-tight">Timeline & Gantt Chart</h1>
+      <p class="text-sm text-slate-500 mt-1" id="header-subtitle">
+        <!-- Populated by JS -->
+      </p>
+    </div>
+
+    <!-- Controls bar -->
+    <div class="flex flex-wrap items-center gap-6 mb-6 p-4 bg-slate-900/60 border border-slate-800 rounded-xl">
+
+      <!-- Toggle: Show Fast-Follow -->
+      <label class="flex items-center gap-3 cursor-pointer select-none group">
+        <div class="relative">
+          <input type="checkbox" id="toggle-fast-follow" class="sr-only peer" />
+          <div class="toggle-track w-10 h-5 bg-slate-700 rounded-full peer-checked:bg-amber-500/60"></div>
+          <div class="toggle-thumb absolute top-0.5 left-0.5 w-4 h-4 bg-slate-300 rounded-full peer-checked:translate-x-5 peer-checked:bg-amber-400"></div>
+        </div>
+        <span class="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">Show Fast-Follow</span>
+      </label>
+
+      <!-- Toggle: Highlight Critical Path -->
+      <label class="flex items-center gap-3 cursor-pointer select-none group">
+        <div class="relative">
+          <input type="checkbox" id="toggle-critical-path" class="sr-only peer" />
+          <div class="toggle-track w-10 h-5 bg-slate-700 rounded-full peer-checked:bg-red-500/60"></div>
+          <div class="toggle-thumb absolute top-0.5 left-0.5 w-4 h-4 bg-slate-300 rounded-full peer-checked:translate-x-5 peer-checked:bg-red-400"></div>
+        </div>
+        <span class="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">Highlight Critical Path</span>
+      </label>
+
+      <!-- Separator -->
+      <div class="hidden sm:block w-px h-6 bg-slate-700"></div>
+
+      <!-- Legend -->
+      <div class="flex items-center gap-4 flex-wrap">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-600 mr-1">Legend</span>
+        <div id="legend-items" class="flex items-center gap-3 flex-wrap">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Gantt chart -->
+    <div id="gantt-chart" class="mb-10">
+      <!-- Rendered by GanttChart.render() -->
+      <div class="flex items-center justify-center h-40 text-slate-600 text-sm">Loading chart...</div>
+    </div>
+
+    <!-- Sprint summary cards -->
+    <div class="mb-4">
+      <h2 class="text-lg font-semibold text-slate-200 mb-4">Sprint Breakdown</h2>
+    </div>
+    <div id="sprint-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+      <!-- Populated by JS -->
+    </div>
+
+  </main>
+
+  <script>
+    // ---- State ----
+    let showFastFollow = false;
+    let highlightCriticalPath = false;
+
+    // ---- Init ----
+    document.addEventListener('DOMContentLoaded', () => {
+      const data = DATA;
+
+      // Header subtitle
+      document.getElementById('header-subtitle').textContent =
+        `${ChartUtils.shortDate(data.meta.startDate)} - ${ChartUtils.shortDate(data.meta.endDate || '2026-04-25')} | ${data.sprints.length} Sprints | Ship: ${ChartUtils.shortDate(data.meta.shipDate)}`;
+
+      // Legend
+      renderLegend(data.groups);
+
+      // Toggle listeners
+      document.getElementById('toggle-fast-follow').addEventListener('change', (e) => {
+        showFastFollow = e.target.checked;
+        renderGantt();
+      });
+      document.getElementById('toggle-critical-path').addEventListener('change', (e) => {
+        highlightCriticalPath = e.target.checked;
+        renderGantt();
+      });
+
+      // Initial render
+      renderGantt();
+      renderSprintCards(data);
+    });
+
+    // ---- Render legend ----
+    function renderLegend(groups) {
+      const container = document.getElementById('legend-items');
+      if (!container || !groups) return;
+      container.innerHTML = groups.map(g => `
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full" style="background:${g.color}"></span>
+          <span class="text-xs text-slate-400">${g.label}</span>
+        </div>
+      `).join('');
+    }
+
+    // ---- Render Gantt chart ----
+    function renderGantt() {
+      const data = DATA;
+      const endDate = data.meta.endDate || '2026-04-25';
+
+      // Always include today so the arrow marker is always visible
+      const todayStr = ChartUtils.today();
+      const chartStart = todayStr < data.meta.startDate ? todayStr : data.meta.startDate;
+
+      GanttChart.render('gantt-chart', {
+        tickets: data.tickets,
+        startDate: chartStart,
+        endDate: endDate,
+        shipDate: data.meta.shipDate,
+        sprints: data.sprints,
+        showFastFollow: showFastFollow,
+        highlightCriticalPath: highlightCriticalPath,
+        groups: data.groups
+      });
+    }
+
+    // ---- Render Sprint Summary Cards ----
+    function renderSprintCards(data) {
+      const container = document.getElementById('sprint-cards');
+      if (!container) return;
+
+      container.innerHTML = data.sprints.map((sprint, idx) => {
+        // Find tickets that overlap this sprint
+        const sprintTickets = data.tickets.filter(t => {
+          // A ticket overlaps a sprint if its start is before sprint end AND its end is on or after sprint start
+          return t.ganttStart <= sprint.end && t.ganttEnd >= sprint.start;
+        });
+
+        // Also filter by fast-follow visibility if needed (sprint cards always show all for reference)
+        const totalMin = sprintTickets.reduce((sum, t) => sum + t.pointsMin, 0);
+        const totalMax = sprintTickets.reduce((sum, t) => sum + t.pointsMax, 0);
+
+        const mvpTickets = sprintTickets.filter(t => t.isMvp);
+        const ffTickets = sprintTickets.filter(t => !t.isMvp);
+
+        // Color accents per sprint
+        const accentColors = ['border-blue-500/40', 'border-green-500/40', 'border-red-500/40'];
+        const accentDots = ['bg-blue-500', 'bg-green-500', 'bg-red-500'];
+        const accent = accentColors[idx] || 'border-slate-700';
+        const dot = accentDots[idx] || 'bg-slate-500';
+
+        // Is this the ship sprint?
+        const hasShipDate = data.meta.shipDate >= sprint.start && data.meta.shipDate <= sprint.end;
+
+        return `
+          <div class="bg-slate-900/80 border ${accent} rounded-xl p-5 space-y-4">
+            <!-- Sprint header -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full ${dot}"></span>
+                <span class="text-sm font-semibold text-slate-200">${sprint.name}</span>
+                ${hasShipDate ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500/15 text-red-400 border border-red-500/20">Ship Date</span>' : ''}
+              </div>
+              <span class="text-xs text-slate-500">${sprint.weeks}w</span>
+            </div>
+
+            <!-- Date range -->
+            <div class="text-xs text-slate-500 font-mono">
+              ${ChartUtils.shortDate(sprint.start)} &ndash; ${ChartUtils.shortDate(sprint.end)}
+            </div>
+
+            <!-- Points total -->
+            <div class="flex items-center gap-3">
+              <div class="text-xl font-bold text-slate-100 font-mono">${totalMin}-${totalMax}</div>
+              <div class="text-xs text-slate-500">points</div>
+            </div>
+
+            <!-- Ticket list -->
+            <div class="space-y-1.5">
+              <span class="text-[10px] font-bold uppercase tracking-widest text-slate-600 block">Tickets (${sprintTickets.length})</span>
+              <div class="flex flex-wrap gap-1.5">
+                ${sprintTickets.map(t => {
+                  const gc = Theme.groupColor(t.group);
+                  return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono ${gc.bg} ${gc.text} border ${gc.border}">${t.id}</span>`;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- MVP vs Fast-Follow breakdown -->
+            ${ffTickets.length > 0 ? `
+            <div class="flex items-center gap-4 pt-2 border-t border-slate-800">
+              <div class="text-xs text-slate-500">
+                <span class="text-green-400 font-medium">${mvpTickets.length}</span> MVP
+              </div>
+              <div class="text-xs text-slate-500">
+                <span class="text-amber-400 font-medium">${ffTickets.length}</span> Fast-Follow
+              </div>
+            </div>
+            ` : `
+            <div class="flex items-center gap-4 pt-2 border-t border-slate-800">
+              <div class="text-xs text-slate-500">
+                <span class="text-green-400 font-medium">${mvpTickets.length}</span> MVP tickets
+              </div>
+            </div>
+            `}
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+
+</body>
+</html>
