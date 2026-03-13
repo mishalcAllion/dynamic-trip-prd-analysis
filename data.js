@@ -21,7 +21,9 @@ const DEFAULT_DATA = {
     { id: "waruna", name: "Waruna Samarasinghe", short: "Waruna", role: "Mobile UI/UX", focus: "All Core UI tickets (C1-C5), Fast-Follow UI (F1, F2, F4)", location: "Canada", tz: "GMT-6", pointsMin: 80, pointsMax: 110, weeklyCapacity: 40, isBottleneck: true, color: "#3b82f6" },
     { id: "kalpa", name: "Kalpa Thathsara", short: "Kalpa", role: "Mobile Backend/Logic", focus: "Backend API (P2), Phase logic (P4)", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 50, pointsMax: 70, weeklyCapacity: 40, isBottleneck: false, color: "#22c55e" },
     { id: "shashila", name: "Shashila Heshan", short: "Shashila", role: "Backend Integrations", focus: "Notion schema (P1), Task dashboard (P3), Push notifications (F3)", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 11, pointsMax: 16, weeklyCapacity: 40, isBottleneck: false, color: "#a855f7" },
-    { id: "juan", name: "Juan", short: "Juan", role: "Design", focus: "Design gaps (G1-G3) -- BLOCKS ALL UI WORK", location: "TBD", tz: "TBD", pointsMin: 16, pointsMax: 24, weeklyCapacity: 40, isBottleneck: false, isHighestRisk: true, color: "#f59e0b" },
+    { id: "yasiru", name: "Yasiru Nilan", short: "Yasiru", role: "Tech Lead / Validation Engine", focus: "Technical architecture oversight, airline validation components", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 0, pointsMax: 0, weeklyCapacity: 40, isBottleneck: false, color: "#06b6d4" },
+    { id: "tharaka", name: "Tharaka", short: "Tharaka", role: "Software Architect", focus: "System architecture, technical design review", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 0, pointsMax: 0, weeklyCapacity: 40, isBottleneck: false, color: "#6366f1" },
+    { id: "thiranjaya", name: "Thiranjaya Munasinghe", short: "Thiranjaya", role: "Validation Backend / Flight Module", focus: "Validation backend, flight module, Command Center integration", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 0, pointsMax: 0, weeklyCapacity: 40, isBottleneck: false, color: "#f97316" },
     { id: "thilini", name: "Thilini", short: "Thilini", role: "QA", focus: "All parent tickets -- reproduce / validate", location: "TBD", tz: "TBD", pointsMin: 0, pointsMax: 0, weeklyCapacity: 40, isBottleneck: false, color: "#ec4899" },
   ],
 
@@ -277,7 +279,7 @@ const DEFAULT_DATA = {
     {
       id: "G1", group: "design-gap", title: "Onboarding Modal",
       description: "First-time user onboarding for dynamic trip page",
-      assignee: "juan", qaAssignee: "thilini",
+      assignee: "waruna", qaAssignee: "thilini",
       pointsMin: 3, pointsMax: 5, isMvp: true,
       ganttStart: "2026-03-16", ganttEnd: "2026-03-21",
       dependencies: [], blocksTickets: [],
@@ -286,7 +288,7 @@ const DEFAULT_DATA = {
     {
       id: "G2", group: "design-gap", title: "Suggestion States",
       description: "Design for empty states, error states, and loading skeletons",
-      assignee: "juan", qaAssignee: "thilini",
+      assignee: "waruna", qaAssignee: "thilini",
       pointsMin: 2, pointsMax: 4, isMvp: true,
       ganttStart: "2026-03-16", ganttEnd: "2026-03-22",
       dependencies: [], blocksTickets: [],
@@ -296,7 +298,7 @@ const DEFAULT_DATA = {
     {
       id: "G3", group: "design-gap", title: "Full Design Pass",
       description: "Complete Figma designs for all core screens -- BLOCKS ALL UI WORK",
-      assignee: "juan", qaAssignee: "thilini",
+      assignee: "waruna", qaAssignee: "thilini",
       pointsMin: 16, pointsMax: 24, isMvp: true, isBlocker: true,
       ganttStart: "2026-03-16", ganttEnd: "2026-03-28",
       dependencies: [], blocksTickets: ["C1", "C2", "C3", "C4", "C5"],
@@ -308,7 +310,7 @@ const DEFAULT_DATA = {
 
   // -- Risks --
   risks: [
-    { id: "R1", title: "Juan (Design) availability unknown", severity: "critical", likelihood: "high", impact: "G3 (Full Design Pass) blocks all 5 Core UI tickets. If Juan is unavailable or slow, Waruna's 80-110 points of work cannot start.", mitigation: "Confirm Juan's availability and sprint commitment by March 17. Fallback: Waruna builds from prototype screens." },
+    { id: "R1", title: "G3 Full Design Pass blocks all Core UI", severity: "critical", likelihood: "high", impact: "G3 (Full Design Pass) is owned by Waruna who also holds 80-110 pts of Core UI work. Design deliverables must land before C1-C5 can start -- compresses Waruna's effective build window to ~3 weeks.", mitigation: "Prioritise G1-G3 in Sprint 9. Waruna builds from existing prototype screens as interim fallback if full Figma pass is delayed." },
     { id: "R2", title: "Waruna is single-threaded bottleneck", severity: "high", likelihood: "medium", impact: "80-110 points assigned to one person across 5 weeks = 16-22 pts/week. At 1pt = 1hr, this is at or above 40hr/week capacity.", mitigation: "Strict prioritization. C3 (Itinerary & Cards) is largest -- start first. Defer F1/F2/F4 fast-follows if behind." },
     { id: "R3", title: "Notion API rate limits under load", severity: "medium", likelihood: "low", impact: "3 req/sec limit. Task auto-creation + component reads could bottleneck during active user sessions.", mitigation: "PRD plans Redis/Postgres read-replica cache for V1.5. V1 acceptable at ~50 active trips." },
     { id: "R4", title: "PRD scope creep mid-sprint", severity: "medium", likelihood: "medium", impact: "PRD already changed between Mar 5 and Mar 9 (countdown timer removed, comment model restructured). Further changes add rework.", mitigation: "Lock PRD scope for Core features by Sprint 9 start (Mar 16). Change control process for additions." },
