@@ -23,7 +23,7 @@ const DEFAULT_DATA = {
     { id: "shashila", name: "Shashila Heshan", short: "Shashila", role: "Backend Integrations", focus: "Notion schema (P1), Task dashboard (P3), Push notifications (F3)", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 11, pointsMax: 16, weeklyCapacity: 40, isBottleneck: false, color: "#a855f7" },
     { id: "yasiru", name: "Yasiru Nilan", short: "Yasiru", role: "Tech Lead / Validation Engine", focus: "Technical architecture oversight, airline validation components", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 0, pointsMax: 0, weeklyCapacity: 40, isBottleneck: false, color: "#06b6d4" },
     { id: "tharaka", name: "Tharaka", short: "Tharaka", role: "Software Architect", focus: "System architecture, technical design review", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 0, pointsMax: 0, weeklyCapacity: 40, isBottleneck: false, color: "#6366f1" },
-    { id: "thiranjaya", name: "Thiranjaya Munasinghe", short: "Thiranjaya", role: "Validation Backend / Flight Module", focus: "Validation backend, flight module, Command Center integration", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 0, pointsMax: 0, weeklyCapacity: 40, isBottleneck: false, color: "#f97316" },
+    { id: "thiranjaya", name: "Thiranjaya Munasinghe", short: "Thiranjaya", role: "Validation Backend / Flight Module", focus: "Award flight pipeline integration for trip component cards (P2.8), validation backend", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 3, pointsMax: 5, weeklyCapacity: 40, isBottleneck: false, color: "#f97316" },
     { id: "thilini", name: "Thilini", short: "Thilini", role: "QA", focus: "All parent tickets -- reproduce / validate", location: "TBD", tz: "TBD", pointsMin: 0, pointsMax: 0, weeklyCapacity: 40, isBottleneck: false, color: "#ec4899" },
   ],
 
@@ -59,7 +59,7 @@ const DEFAULT_DATA = {
       subIssues: [
         { id: "P1.1", title: "Add Trip Page Type, Cover Image URL, feedback fields to Trips DB", assignee: "shashila", pointsMin: 2, pointsMax: 4, prdRef: { section: "Section 6.1 - Trips Database New Fields", excerpt: "Trip Page Type select: Structured / Notion Embedded / Custom" } },
         { id: "P1.2", title: "Add Insider Tips rich text fields to Trips DB", assignee: "shashila", pointsMin: 1, pointsMax: 2, prdRef: { section: "Section 4.9 - Insider Tips", excerpt: "Stored as rich text fields on Trips Database: Transportation, Money & Connectivity, Culture & Etiquette, Packing & Prep" } },
-        { id: "P1.3", title: "Add Image URLs, Advisor Reasoning, Comments JSON, Option Group, Key Time, Display Order, Website URL, decision fields to Components DB", assignee: "shashila", pointsMin: 3, pointsMax: 4, prdRef: { section: "Section 6.2 - Components Database New Fields", excerpt: "Image URLs (text), Advisor Reasoning (rich text), Comments (JSON), Display Order (number), Option Group (text), Client Decision Date, Decided By, Key Time, Website URL" } },
+        { id: "P1.3", title: "Add Image URLs, Advisor Reasoning, Client Request + Ops Response (text), Option Group, Key Time, Display Order, Website URL, decision fields to Components DB", assignee: "shashila", pointsMin: 3, pointsMax: 4, prdRef: { section: "Section 6.2 - Components Database New Fields", excerpt: "Image URLs (text), Advisor Reasoning (rich text), Client Request (text), Ops Response (text) [NOT JSON - confirmed Mar 13], Display Order (number), Option Group (text), Client Decision Date, Decided By, Key Time, Website URL" } },
       ]
     },
     {
@@ -76,10 +76,11 @@ const DEFAULT_DATA = {
         { id: "P2.1", title: "GET /trips/:id - Trip metadata + components + comment counts + insider tips", assignee: "kalpa", pointsMin: 5, pointsMax: 7, prdRef: { section: "Section 7.2", excerpt: "Trip metadata + components + comment counts + insider tips" } },
         { id: "P2.2", title: "GET /trips/:id/components/:componentId - Full component detail with comments", assignee: "kalpa", pointsMin: 4, pointsMax: 5, prdRef: { section: "Section 7.2", excerpt: "Full component detail including comments with review statuses" } },
         { id: "P2.3", title: "PATCH /trips/:id/components/:componentId/decision - Update Client Decision", assignee: "kalpa", pointsMin: 4, pointsMax: 5, prdRef: { section: "Section 7.2 + 7.9", excerpt: "Update Client Decision + auto-create Notion Task Dashboard task" } },
-        { id: "P2.4", title: "POST /trips/:id/components/:componentId/comments - Append comment to JSON", assignee: "kalpa", pointsMin: 3, pointsMax: 5, prdRef: { section: "Section 7.2 + 4.5", excerpt: "Append comment to component's Comments JSON + auto-create task" } },
+        { id: "P2.4", title: "POST /trips/:id/components/:componentId/comments - Write client_requests text field", assignee: "kalpa", pointsMin: 3, pointsMax: 5, prdRef: { section: "Section 7.2 + 4.5", excerpt: "Write member request to client_requests text field on component. Ops replies via ops_response field. Both render in Request Changes view. Auto-create ops task." } },
         { id: "P2.5", title: "PATCH /trips/:id/feedback - Submit planning or trip feedback", assignee: "kalpa", pointsMin: 2, pointsMax: 3, prdRef: { section: "Section 7.2 + 4.7", excerpt: "Submit planning or trip feedback (rating + pill tags)" } },
         { id: "P2.6", title: "GET /trips - Trip list for authenticated member", assignee: "kalpa", pointsMin: 2, pointsMax: 3, prdRef: { section: "Section 7.2", excerpt: "Trip list for authenticated member" } },
         { id: "P2.7", title: "Notion Task Dashboard auto-create integration", assignee: "kalpa", pointsMin: 4, pointsMax: 4, prdRef: { section: "Section 7.9", excerpt: "Every member action auto-creates a task in Notion Task Dashboard. Deduplication: same component within 5 min = single task." } },
+        { id: "P2.8", title: "Award flight data pipeline spec — integration with Thiranjaya + Andy", assignee: "thiranjaya", pointsMin: 3, pointsMax: 5, prdRef: { section: "Section 4.3 + 4.4", excerpt: "Mar 13 meeting: Thiranjaya + Andy to determine how validated award flight data populates trip component cards automatically. Ops manual entry is MVP fallback." } },
       ]
     },
     {
@@ -99,7 +100,7 @@ const DEFAULT_DATA = {
     },
     {
       id: "P4", group: "prereq", title: "Phase-Dependent View Logic",
-      description: "Control what UI sections show/hide based on trip status per PRD Section 5",
+      description: "Control what UI sections show/hide based on trip status per PRD Section 5. Trip status transitions are manually triggered by ops in Notion for MVP (not automated). Also handles Trip Page Type routing: Dynamic vs Notion-embedded trip pages (field: Trip Page Type = Structured / Notion Embedded / Custom).",
       assignee: "kalpa", qaAssignee: "thilini",
       pointsMin: 5, pointsMax: 8, isMvp: true,
       ganttStart: "2026-03-23", ganttEnd: "2026-03-28",
@@ -182,7 +183,7 @@ const DEFAULT_DATA = {
       subIssues: [
         { id: "C4.1", title: "Hero Image Carousel with pinch-to-zoom + lightbox", assignee: "waruna", pointsMin: 4, pointsMax: 5, prdRef: { section: "Section 4.4 + 7.6", excerpt: "Swipeable carousel, dot indicator, pinch-to-zoom, lightbox. Image URL parsing: split by newline, https:// required." } },
         { id: "C4.2", title: "'Why we love this option' reasoning section", assignee: "waruna", pointsMin: 3, pointsMax: 4, prdRef: { section: "Section 4.4 + 7.7", excerpt: "Advisor reasoning: bold text = title, rest = body. Empty = section omitted." } },
-        { id: "C4.3", title: "Detailed Pricing - cash, points, taxes, per-night, value assessment", assignee: "waruna", pointsMin: 3, pointsMax: 5, prdRef: { section: "Section 4.4", excerpt: "Total cash, points, taxes, per-night rate, points value assessment. Side-by-side if both exist." } },
+        { id: "C4.3", title: "Detailed Pricing - single-mode: cash OR points (not combined)", assignee: "waruna", pointsMin: 3, pointsMax: 5, prdRef: { section: "Section 4.4", excerpt: "Cards are single-mode: either points (miles + tax) OR cash (dollar amount). Never side-by-side. CPP calculation removed (Mar 13 meeting: 'We can remove that')." } },
         { id: "C4.4", title: "Type-specific Additional Details section", assignee: "waruna", pointsMin: 3, pointsMax: 5, prdRef: { section: "Section 4.4", excerpt: "Varies by type: check-in times, airline, cuisine, duration, etc." } },
         { id: "C4.5", title: "Sticky footer with approve/decline + 'Ask a question' quick-action", assignee: "waruna", pointsMin: 4, pointsMax: 5, prdRef: { section: "Section 4.4", excerpt: "Sticky footer: approve/decline/request changes + chat-bubble icon Ask a question (opens comment sheet)" } },
         { id: "C4.6", title: "Finalized detail view - read-only, Confirmed badge + conf number", assignee: "waruna", pointsMin: 3, pointsMax: 4, prdRef: { section: "Section 4.4", excerpt: "Read-only. Carousel/reasoning/pricing visible. Confirmed badge + conf number instead of approve/decline." } },
@@ -208,7 +209,7 @@ const DEFAULT_DATA = {
     // === FAST-FOLLOW ===
     {
       id: "F1", group: "fast-follow", title: "Component Comments",
-      description: "Comment system stored as JSON on component per PRD Section 4.5",
+      description: "Text-based request/response model per Mar 13 meeting clarification. client_requests (text) stores member change request; ops_response (text) stores ops reply. Both render in the Request Changes view. NOT a JSON array as originally specced in PRD Section 4.5.",
       assignee: "waruna", qaAssignee: "thilini",
       pointsMin: 16, pointsMax: 22, isMvp: false,
       ganttStart: "2026-04-16", ganttEnd: "2026-04-28",
@@ -219,7 +220,7 @@ const DEFAULT_DATA = {
       subIssues: [
         { id: "F1.1", title: "Comment badge on component card (unresolved count)", assignee: "waruna", pointsMin: 2, pointsMax: 3 },
         { id: "F1.2", title: "Comment section in detail view", assignee: "waruna", pointsMin: 3, pointsMax: 4 },
-        { id: "F1.3", title: "Post comment flow (append JSON + create task)", assignee: "waruna", pointsMin: 3, pointsMax: 4 },
+        { id: "F1.3", title: "Post comment flow (write client_requests text + create ops task)", assignee: "waruna", pointsMin: 3, pointsMax: 4 },
         { id: "F1.4", title: "Review status display (Reviewing, Addressed, Won't Address)", assignee: "waruna", pointsMin: 3, pointsMax: 4 },
         { id: "F1.5", title: "Comment visibility filter (All vs Open only)", assignee: "waruna", pointsMin: 2, pointsMax: 3 },
         { id: "F1.6", title: "Request Changes -> auto-create comment with tag", assignee: "waruna", pointsMin: 3, pointsMax: 4 },
@@ -313,8 +314,9 @@ const DEFAULT_DATA = {
     { id: "R1", title: "G3 Full Design Pass blocks all Core UI", severity: "critical", likelihood: "high", impact: "G3 (Full Design Pass) is owned by Waruna who also holds 80-110 pts of Core UI work. Design deliverables must land before C1-C5 can start -- compresses Waruna's effective build window to ~3 weeks.", mitigation: "Prioritise G1-G3 in Sprint 9. Waruna builds from existing prototype screens as interim fallback if full Figma pass is delayed." },
     { id: "R2", title: "Waruna is single-threaded bottleneck", severity: "high", likelihood: "medium", impact: "80-110 points assigned to one person across 5 weeks = 16-22 pts/week. At 1pt = 1hr, this is at or above 40hr/week capacity.", mitigation: "Strict prioritization. C3 (Itinerary & Cards) is largest -- start first. Defer F1/F2/F4 fast-follows if behind." },
     { id: "R3", title: "Notion API rate limits under load", severity: "medium", likelihood: "low", impact: "3 req/sec limit. Task auto-creation + component reads could bottleneck during active user sessions.", mitigation: "PRD plans Redis/Postgres read-replica cache for V1.5. V1 acceptable at ~50 active trips." },
-    { id: "R4", title: "PRD scope creep mid-sprint", severity: "medium", likelihood: "medium", impact: "PRD already changed between Mar 5 and Mar 9 (countdown timer removed, comment model restructured). Further changes add rework.", mitigation: "Lock PRD scope for Core features by Sprint 9 start (Mar 16). Change control process for additions." },
+    { id: "R4", title: "PRD scope creep mid-sprint", severity: "medium", likelihood: "medium", impact: "PRD changed Mar 5→Mar 9 (countdown timer removed, comment model restructured). Mar 13 meeting further corrected comment model (text not JSON). Further unmanaged changes add rework.", mitigation: "Lock PRD scope for Core features by Sprint 9 start (Mar 16). Sunthar confirmed: 'as you're breaking it up into tickets, ping me and we'll talk about it.' Change control for additions post-lock." },
     { id: "R5", title: "Cross-timezone coordination", severity: "low", likelihood: "high", impact: "Waruna (GMT-6) and Kalpa/Shashila (GMT+5:30) have 11.5-hour gap. Blockers discovered at end of Waruna's day wait 12+ hours for response.", mitigation: "Async handoff notes in Linear. 30-min overlap window at start of Waruna's day for sync." },
+    { id: "R6", title: "Award flight automation dependency unresolved", severity: "medium", likelihood: "medium", impact: "How validated award flight data populates trip component cards automatically has no spec. Depends on Thiranjaya + Andy pipeline design. If delayed, flight cards must be entered manually by ops.", mitigation: "Ops manual entry is valid MVP fallback. Spike with Thiranjaya + Andy in Sprint 9 to scope automation path. Track as P2.8." },
   ],
 
   // -- Computed (populated on load) --
