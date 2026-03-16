@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Trip Page — PRD Gap Analysis (Mar 16)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Commissioner', sans-serif; background: #f6f4f0; color: #23293a; font-size: 14px; line-height: 1.6; }
+    .page { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    /* Header */
+    .doc-header { background: #23293a; color: white; padding: 32px 40px; margin-bottom: 0; }
+    .doc-header .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #ff5e32; margin-bottom: 6px; }
+    .doc-header h1 { font-size: 24px; font-weight: 700; }
+    .doc-header .subtitle { font-size: 13px; color: #d1d5db; margin-top: 8px; line-height: 1.5; max-width: 700px; }
+    .doc-header .meta { font-size: 12px; color: #9ca3af; margin-top: 6px; }
+
+    /* Summary bar */
+    .summary-bar { background: white; border-bottom: 1px solid #eae3d7; padding: 16px 40px; display: flex; gap: 32px; align-items: center; }
+    .stat { text-align: center; }
+    .stat .num { font-size: 26px; font-weight: 700; }
+    .stat .label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #9ca3af; margin-top: 2px; }
+    .stat.total .num { color: #23293a; }
+    .stat.critical .num { color: #e53e3e; }
+    .stat.high .num { color: #ff5e32; }
+    .stat.medium .num { color: #9c7956; }
+    .stat.discrepancy .num { color: #3b82f6; }
+
+    /* Section blocks */
+    .screen-block { background: white; border-radius: 16px; border: 1px solid #eae3d7; margin-bottom: 24px; overflow: hidden; }
+    .screen-header { display: flex; align-items: center; gap: 14px; padding: 18px 24px; border-bottom: 1px solid #eae3d7; background: #f6f4f0; }
+    .screen-badge { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; }
+    .screen-header h2 { font-size: 16px; font-weight: 700; }
+    .screen-header .screen-desc { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+
+    /* Gap cards */
+    .gap-card { padding: 20px 24px; border-bottom: 1px solid #eae3d7; }
+    .gap-card:last-child { border-bottom: none; }
+    .gap-card:hover { background: #fafaf8; }
+    .gap-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    .gap-id { font-size: 11px; font-weight: 700; color: white; background: #23293a; padding: 3px 8px; border-radius: 6px; flex-shrink: 0; margin-top: 1px; }
+    .gap-id.critical { background: #e53e3e; }
+    .gap-id.high { background: #ff5e32; }
+    .gap-id.medium { background: #9c7956; }
+    .gap-title { font-size: 15px; font-weight: 700; line-height: 1.4; }
+    .gap-body { margin-left: 0; }
+    .gap-field { margin-bottom: 8px; }
+    .gap-field-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #9ca3af; margin-bottom: 2px; }
+    .gap-field-value { font-size: 13px; line-height: 1.55; color: #374151; }
+    .gap-field-value strong { color: #23293a; }
+
+    /* Severity badges */
+    .sev { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+    .sev-critical { background: #e53e3e18; color: #e53e3e; }
+    .sev-high { background: #ff5e3218; color: #ff5e32; }
+    .sev-medium { background: #9c795618; color: #9c7956; }
+    .sev-low { background: #12B28C18; color: #12B28C; }
+
+    /* Tags */
+    .tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 12px; margin-right: 4px; white-space: nowrap; }
+    .tag-prd { background: #3b82f618; color: #3b82f6; }
+    .tag-meeting { background: #9c795618; color: #9c7956; }
+    .tag-tool { background: #12B28C18; color: #12B28C; }
+    .tag-absent { background: #e53e3e18; color: #e53e3e; }
+
+    /* Code inline */
+    .code-inline { font-family: 'Courier New', monospace; font-size: 11px; background: #23293a12; color: #ff5e32; padding: 2px 6px; border-radius: 4px; }
+
+    /* Owner pill */
+    .owner { display: inline-block; font-size: 11px; font-weight: 600; color: #23293a; background: #23293a0d; padding: 2px 10px; border-radius: 12px; border: 1px solid #23293a18; }
+
+    /* Discrepancy table */
+    .disc-table { width: 100%; border-collapse: collapse; }
+    .disc-table th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #9ca3af; padding: 10px 16px; text-align: left; border-bottom: 2px solid #eae3d7; background: #fafaf8; }
+    .disc-table td { padding: 14px 16px; border-bottom: 1px solid #eae3d7; vertical-align: top; font-size: 13px; line-height: 1.5; }
+    .disc-table tr:last-child td { border-bottom: none; }
+    .disc-table tr:hover td { background: #fafaf8; }
+    .disc-table .risk { color: #e53e3e; font-weight: 600; }
+
+    /* Callout */
+    .callout { border-radius: 12px; padding: 14px 18px; margin: 16px 24px; font-size: 13px; line-height: 1.55; }
+    .callout-blue { background: #3b82f615; border: 1px solid #3b82f630; color: #1e40af; }
+
+    /* Severity key */
+    .severity-key { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; padding-top: 4px; }
+    .severity-key .key-label { font-size: 11px; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    /* Footer */
+    .doc-footer { background: #23293a; color: white; border-radius: 16px; padding: 24px 28px; margin-top: 8px; }
+    .doc-footer h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #ff5e32; margin-bottom: 12px; }
+    .doc-footer p { font-size: 13px; color: #d1d5db; line-height: 1.6; margin-bottom: 6px; }
+    .doc-footer .footer-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #9ca3af; margin-right: 6px; }
+
+    /* Print styles */
+    @media print {
+      body { background: white; font-size: 12px; }
+      .page { max-width: 100%; padding: 0 16px 40px; }
+      .doc-header { padding: 20px 24px; break-after: avoid; }
+      .summary-bar { padding: 12px 24px; }
+      .screen-block { break-inside: avoid; margin-bottom: 16px; }
+      .gap-card { break-inside: avoid; }
+      .doc-footer { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="doc-header">
+  <div class="page" style="padding-top:0; padding-bottom:0;">
+    <div class="eyebrow">Maestro -- Mobile App -- Dynamic Trip Page</div>
+    <h1>PRD Gap Analysis (Mar 16)</h1>
+    <div class="subtitle">Requirements gaps, inconsistencies, and undefined areas across the Mar 16 PRD, Mar 13 engineering meeting, and PRD Analysis Tool</div>
+    <div class="meta">Prepared: March 16, 2026 -- Analyst: Mishal Chowdhury -- Sources: PRD (Mar 16), Engineering Meeting (Mar 13), PRD Analysis Tool (data.js)</div>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary-bar">
+  <div class="stat total"><div class="num">14</div><div class="label">Total Gaps</div></div>
+  <div class="stat critical"><div class="num">4</div><div class="label">Critical</div></div>
+  <div class="stat high"><div class="num">5</div><div class="label">High Priority</div></div>
+  <div class="stat medium"><div class="num">5</div><div class="label">Medium / Low</div></div>
+  <div class="stat discrepancy"><div class="num">5</div><div class="label">PRD vs Tool</div></div>
+</div>
+
+<div class="page">
+
+  <!-- Severity key -->
+  <div class="severity-key">
+    <span class="key-label">Severity key:</span>
+    <span class="sev sev-critical">Critical -- Blocks development or causes wrong implementation</span>
+    <span class="sev sev-high">High -- Significant risk if not resolved before Sprint 9</span>
+    <span class="sev sev-medium">Medium -- Should be addressed but won't block MVP</span>
+    <span class="sev sev-low">Low -- Acceptable for V1, plan for V1.5</span>
+  </div>
+
+  <!-- Source key -->
+  <div class="severity-key" style="margin-top:-12px; margin-bottom:28px;">
+    <span class="key-label">Source tags:</span>
+    <span class="tag tag-prd">PRD</span>
+    <span class="tag tag-meeting">Mar 13 Meeting</span>
+    <span class="tag tag-tool">Analysis Tool</span>
+    <span class="tag tag-absent">Absent from all sources</span>
+  </div>
+
+
+  <!-- ============================================================ -->
+  <!-- SECTION 1: CRITICAL GAPS -->
+  <!-- ============================================================ -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div class="screen-badge" style="background:#e53e3e;">!</div>
+      <div>
+        <h2>Critical Gaps</h2>
+        <div class="screen-desc">Blocks development or will cause incorrect implementation if not resolved immediately</div>
+      </div>
+    </div>
+
+    <!-- G1 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id critical">G1</span>
+        <div>
+          <div class="gap-title">Section 7.11 Error & Empty States -- Truncated</div>
+          <div style="margin-top:4px;"><span class="sev sev-critical">Critical</span> <span class="tag tag-prd">PRD</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">PRD Section 7.11 -- the heading <span class="code-inline">Error & Empty States</span> exists, but the content beneath it is missing. The section appears to have been truncated or never completed.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value"><strong>Devs have zero spec for error handling, loading states, empty trips, or network failures.</strong> Without this, every developer will invent their own patterns, leading to inconsistent UX across the trip page. This includes: what to show when a trip has no components, what happens on API timeout, retry logic UX, skeleton vs spinner loading, and 404/permission error screens.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Sunthar / Nirav (PM)</span> to spec the full section before Sprint 9 development begins</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G2 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id critical">G2</span>
+        <div>
+          <div class="gap-title">Comments Model Inconsistency -- PRD Contradicts Itself</div>
+          <div style="margin-top:4px;"><span class="sev sev-critical">Critical</span> <span class="tag tag-prd">PRD</span> <span class="tag tag-meeting">Mar 13 Meeting</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">PRD Section 7.2 says <span class="code-inline">"append to Comments JSON array"</span>, implying a JSON-based threaded comment model. However, Section 6.2 defines the data model with two plain text fields: <span class="code-inline">Client Request</span> and <span class="code-inline">Ops Response</span>. The Mar 13 engineering meeting explicitly confirmed the two-text-fields model.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value"><strong>Backend devs will build the wrong data model if they follow Section 7.2.</strong> Section 6.2 and the Mar 13 decision both say two text fields -- but Section 7.2 describes JSON array append logic. A developer reading sequentially will hit Section 7.2 first and may implement the wrong pattern before reaching Section 6.2.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Sunthar + Tharaka</span> to correct PRD Section 7.2 to match the confirmed two-text-field model</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G3 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id critical">G3</span>
+        <div>
+          <div class="gap-title">Auth Flow Undefined</div>
+          <div style="margin-top:4px;"><span class="sev sev-critical">Critical</span> <span class="tag tag-prd">PRD</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">PRD Section 7.2 references <span class="code-inline">"existing auth flow"</span> with no further details. No endpoint, no token format, no session management spec.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value"><strong>Kalpa needs to know: JWT? Session tokens? How does a mobile user map to their Notion member record?</strong> The Dynamic Trip Page pulls member-specific data (their trip, their approvals, their comments). Without a documented auth contract, the API layer cannot correctly scope data to the authenticated user.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Kalpa + Yasiru</span> to document the existing auth flow and confirm it supports member-level data scoping</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G4 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id critical">G4</span>
+        <div>
+          <div class="gap-title">Task Dedup/Batch Logic -- No Implementation Pattern</div>
+          <div style="margin-top:4px;"><span class="sev sev-critical">Critical</span> <span class="tag tag-prd">PRD</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">PRD Section 7.9 describes business rules -- <span class="code-inline">5-minute dedup window</span> and <span class="code-inline">3+ actions in 2 minutes = batch task</span> -- but provides no implementation approach.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value"><strong>Shashila needs to know: in-memory dedup? Redis queue? Debounce timer? What happens on server restart -- are pending tasks lost?</strong> The rules are clearly defined but the technical mechanism is not. Without an architectural pattern, the implementation will be fragile or over-engineered.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Tharaka (architect)</span> to define the implementation pattern and persistence strategy</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================ -->
+  <!-- SECTION 2: HIGH-PRIORITY GAPS -->
+  <!-- ============================================================ -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div class="screen-badge" style="background:#ff5e32;">H</div>
+      <div>
+        <h2>High-Priority Gaps</h2>
+        <div class="screen-desc">Significant risk if not resolved before Sprint 9 kickoff or early in the sprint</div>
+      </div>
+    </div>
+
+    <!-- G5 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id high">G5</span>
+        <div>
+          <div class="gap-title">Award Flight Automation (P2.8) -- No Spec</div>
+          <div style="margin-top:4px;"><span class="sev sev-high">High</span> <span class="tag tag-prd">PRD</span> <span class="tag tag-meeting">Mar 13 Meeting</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">Referenced in both the PRD and Mar 13 meeting as <span class="code-inline">TBD</span>. No spec exists for the automated pipeline that populates trip component cards with award flight data.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value"><strong>Thiranjaya + Andy cannot start.</strong> Ops manual entry is the MVP fallback, but there is also no fallback UI spec for manual component entry. Without either an automation spec or a manual entry spec, flight components will have no data population path.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Thiranjaya + Andy</span> to spec the automation pipeline in Sprint 9. Sunthar to confirm if manual entry fallback needs a UI spec.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G6 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id high">G6</span>
+        <div>
+          <div class="gap-title">Notification Deep Linking -- No Endpoint Spec</div>
+          <div style="margin-top:4px;"><span class="sev sev-high">High</span> <span class="tag tag-prd">PRD</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">PRD Section 4.8 lists 4 notification triggers with throttle rules, but defines no deep link URL scheme or routing spec for where those notifications navigate to within the app.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value"><strong>Push notifications will link to the app but cannot navigate to the right trip or component without a URI scheme.</strong> Users tapping a "Your hotel is ready for approval" notification need to land on the specific component card, not the app home screen.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Kalpa (routing) + Waruna (screen mapping)</span> to define the deep link URI scheme</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G7 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id high">G7</span>
+        <div>
+          <div class="gap-title">Lazy Loading Strategy -- Implementation TBD</div>
+          <div style="margin-top:4px;"><span class="sev sev-high">High</span> <span class="tag tag-prd">PRD</span> <span class="tag tag-meeting">Mar 13 Meeting</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">PRD Section 7.10 describes the intent -- prefetch on scroll, skeleton loading -- but the Mar 13 meeting noted that Kalpa has not yet confirmed the implementation approach.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value"><strong>Trips with 15-30 components could be slow to load without a confirmed strategy.</strong> Luxury travelers expect premium app performance. A 3-5 second load time on a complex trip page would be noticeable and unacceptable for the target demographic.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Kalpa</span> to confirm the lazy loading approach in Sprint 9 planning</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G8 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id high">G8</span>
+        <div>
+          <div class="gap-title">Offline/Connectivity Handling -- Not Mentioned</div>
+          <div style="margin-top:4px;"><span class="sev sev-high">High</span> <span class="tag tag-absent">Absent from all sources</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">Absent from the PRD entirely. Not discussed in the Mar 13 meeting. Not represented in the analysis tool.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value"><strong>Luxury travelers are often on planes, weak hotel wifi, or roaming internationally.</strong> No spec exists for: cached trip data, offline viewing of previously loaded trips, retry logic on failed actions, or connectivity banners. A user approving a hotel component on airplane wifi with no retry logic will see a silent failure.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Sunthar</span> to decide scope -- at minimum, a connectivity banner and retry logic for V1</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G9 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id high">G9</span>
+        <div>
+          <div class="gap-title">Component Perks/Benefits Data Source</div>
+          <div style="margin-top:4px;"><span class="sev sev-high">High</span> <span class="tag tag-meeting">Mar 13 Meeting</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">Mar 13 meeting mentions "fora" perks for hotel components, but there is no Notion field defined for perks and no parsing contract for how perk data reaches the mobile app.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value"><strong>The hotel detail view (S2) shows a perks section, but there is no defined data source to populate it.</strong> Without a Notion field or API contract, the perks section will either be empty or require hardcoded placeholder data -- neither is acceptable for production.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Nirav</span> to clarify the Notion field and data source for component perks/benefits</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================ -->
+  <!-- SECTION 3: MEDIUM / LOW GAPS -->
+  <!-- ============================================================ -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div class="screen-badge" style="background:#9c7956;">M</div>
+      <div>
+        <h2>Medium / Low Gaps</h2>
+        <div class="screen-desc">Should be addressed but will not block the April 15 MVP ship date</div>
+      </div>
+    </div>
+
+    <!-- G10 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id medium">G10</span>
+        <div>
+          <div class="gap-title">Experience Component Type-Specific Schema</div>
+          <div style="margin-top:4px;"><span class="sev sev-medium">Medium</span> <span class="tag tag-meeting">Mar 13 Meeting</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">Mar 13 meeting: <span class="code-inline">"hours or ticket price or whatever"</span> for experience components -- an incomplete, informal description of the schema for non-flight, non-hotel component types.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value">Experience cards may render inconsistently. Each component type (hotel, flight, experience, restaurant, transfer) likely needs different display fields. Without a per-type schema, Waruna will design cards with placeholder fields that may not match real data.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Nirav</span> to define per-type schema (minimum fields per component type)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G11 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id medium">G11</span>
+        <div>
+          <div class="gap-title">No Accessibility Requirements</div>
+          <div style="margin-top:4px;"><span class="sev sev-medium">Medium</span> <span class="tag tag-absent">Absent from all sources</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">Absent from the PRD. No accessibility standards are referenced anywhere in the document.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value">The mobile app should meet WCAG 2.1 AA minimum -- contrast ratios, screen reader labels, touch target sizes (48x48dp minimum). Without explicit requirements, accessibility will be bolted on post-launch rather than built in. This is a reputational risk for a luxury brand.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Waruna + Sunthar</span> to add minimum accessibility requirements to the PRD</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G12 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id medium">G12</span>
+        <div>
+          <div class="gap-title">No Analytics/Event Tracking Spec</div>
+          <div style="margin-top:4px;"><span class="sev sev-medium">Medium</span> <span class="tag tag-prd">PRD</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">Only one event is mentioned in the entire PRD: <span class="code-inline">insider_tip_expanded</span> in Section 4.9. No other screen views, user actions, or conversion events are tracked.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value">No way to measure: feature adoption rates, decision/approval rates, time-to-approve, screen engagement duration, or drop-off points. Without analytics, the team cannot validate whether the Dynamic Trip Page is achieving its goals post-launch.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Sunthar</span> to define an event tracking plan covering key user actions and screen views</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G13 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id medium">G13</span>
+        <div>
+          <div class="gap-title">Image CDN Integration (V1.5)</div>
+          <div style="margin-top:4px;"><span class="sev sev-low">Low</span> <span class="tag tag-prd">PRD</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">PRD Sections 7.4 and 7.6 reference image handling but note that CDN integration is not yet spec'd. This is acceptable for V1.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value">Low risk for April 15 ship. V1 uses direct image URLs from Notion. Image loading performance may be suboptimal on slower connections but is functional. CDN integration (responsive sizes, lazy loading, WebP conversion) is a V1.5 optimization.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Post-launch</span> -- add to V1.5 backlog</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G14 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id medium">G14</span>
+        <div>
+          <div class="gap-title">Date Parsing Fragility</div>
+          <div style="margin-top:4px;"><span class="sev sev-low">Low</span> <span class="tag tag-prd">PRD</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">PRD Section 7.5 acknowledges that the date text field is <span class="code-inline">"fragile"</span>. Ops enters dates as free text in Notion, meaning formats like "March 15", "15/03/2026", and "2026-03-15" could all appear.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value">V1 mitigation exists -- Kalpa's backend date parser handles common formats. V1.5 fix (proper Date-type fields in Notion) is planned. Risk is low for launch but increases as trip volume grows and ops enters more varied date formats.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Kalpa</span> (V1 parser hardening) + <span class="owner">Nirav</span> (V1.5 Notion schema migration to Date fields)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================ -->
+  <!-- SECTION 4: PRD vs ANALYSIS TOOL DISCREPANCIES -->
+  <!-- ============================================================ -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div class="screen-badge" style="background:#3b82f6;">vs</div>
+      <div>
+        <h2>PRD vs Analysis Tool Discrepancies</h2>
+        <div class="screen-desc">Features where the PRD and the Analysis Tool (data.js) disagree on scope, phasing, or priority</div>
+      </div>
+    </div>
+
+    <div class="callout callout-blue" style="margin-top:0;">
+      <strong>Why this matters:</strong> The PRD reads as if all features are in-scope for MVP. The Analysis Tool categorizes some as "Fast-Follow" (post-MVP). Without explicit labels in the PRD, developers and PMs may disagree on what ships April 15 vs what waits. This creates scope creep risk of <strong>44-64 story points</strong> leaking into the MVP.
+    </div>
+
+    <table class="disc-table">
+      <thead>
+        <tr>
+          <th style="width:20%;">Feature</th>
+          <th style="width:25%;">Analysis Tool Status</th>
+          <th style="width:25%;">PRD Status</th>
+          <th style="width:30%;">Risk</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Component Comments (F1)</strong></td>
+          <td>Fast-Follow, 16-22 pts</td>
+          <td>Section 4.6 fully spec'd as if MVP</td>
+          <td class="risk">Scope confusion -- devs may build it now</td>
+        </tr>
+        <tr>
+          <td><strong>Feedback Modals (F2)</strong></td>
+          <td>Fast-Follow, 10-14 pts</td>
+          <td>Section 4.7 fully spec'd</td>
+          <td class="risk">Same -- no "Fast-Follow" label in PRD</td>
+        </tr>
+        <tr>
+          <td><strong>Push Notifications (F3)</strong></td>
+          <td>Fast-Follow, 10-14 pts</td>
+          <td>Section 4.8 fully spec'd</td>
+          <td class="risk">Same -- reads as in-scope for V1</td>
+        </tr>
+        <tr>
+          <td><strong>Insider Tips (F4)</strong></td>
+          <td>Fast-Follow, 8-12 pts</td>
+          <td>Section 4.9 fully spec'd with adoption plan</td>
+          <td class="risk">Same -- includes detailed adoption strategy</td>
+        </tr>
+        <tr style="background:#f6f4f0;">
+          <td><strong>Total Scope Impact</strong></td>
+          <td><strong>198-281 pts total</strong><br>(MVP ~133-184 pts)</td>
+          <td><strong>Everything appears in-scope</strong><br>No "Fast-Follow" labels anywhere</td>
+          <td class="risk"><strong>44-64 pts of Fast-Follow work could leak into MVP.</strong> At 1 pt = 1 hr, that is 44-64 hours of unplanned work across the team.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ============================================================ -->
+  <!-- FOOTER -->
+  <!-- ============================================================ -->
+  <div class="doc-footer">
+    <h3>Document Information</h3>
+    <p><span class="footer-label">Date:</span> March 16, 2026</p>
+    <p><span class="footer-label">Sources:</span> Mar 16 PRD (Sunthar Premakumar) + Mar 13 Engineering Meeting Transcript + PRD Analysis Tool (data.js, updated Mar 14)</p>
+    <p><span class="footer-label">Prepared by:</span> Mishal Chowdhury, Business Analyst</p>
+    <p style="margin-top:12px; padding-top:12px; border-top:1px solid #ffffff18;">
+      <span class="footer-label">Next Step:</span> Review with Sunthar and Nirav before Sprint 9 kickoff. Critical gaps (G1-G4) should be resolved or have owners confirmed before development begins. High-priority gaps (G5-G9) should have resolution plans within the first 3 days of Sprint 9. PRD vs Analysis Tool discrepancies require an explicit scope decision: label features as MVP or Fast-Follow in the PRD itself.
+    </p>
+  </div>
+
+</div>
+
+</body>
+</html>
