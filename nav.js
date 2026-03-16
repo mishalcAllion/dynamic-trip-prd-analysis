@@ -7,6 +7,9 @@ const NAV_ITEMS = [
   { id: 'timeline', label: 'Timeline', icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`, href: 'timeline.html' },
   { id: 'capacity', label: 'Capacity & Risk', icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`, href: 'capacity.html' },
   { id: 'editor', label: 'Data Editor', icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`, href: 'editor.html' },
+  { id: 'separator', label: null, icon: null, href: null },
+  { id: 'architecture', label: 'Architecture', icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>`, href: 'architecture-diagram.html' },
+  { id: 'gap-analysis', label: 'Gap Analysis', icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`, href: 'gap-analysis-mar16.html' },
 ];
 
 function initNav() {
@@ -28,12 +31,18 @@ function initNav() {
       <!-- Nav Links -->
       <nav class="flex-1 py-3 overflow-y-auto">
         ${NAV_ITEMS.map(item => {
+          if (item.id === 'separator') {
+            return `<div class="mx-5 my-2 border-t border-slate-800/80"></div><div class="px-5 py-1 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">Architecture</div>`;
+          }
           const active = currentPage === item.id;
+          const isArch = item.id === 'architecture' || item.id === 'gap-analysis';
           return `
             <a href="${item.href}"
                class="flex items-center gap-3 px-5 py-2.5 text-sm transition-colors ${active
                  ? 'text-slate-100 bg-slate-800/50 border-l-2 border-blue-400'
-                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 border-l-2 border-transparent'}">
+                 : isArch
+                   ? 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 border-l-2 border-transparent'
+                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 border-l-2 border-transparent'}">
               ${item.icon}
               <span>${item.label}</span>
             </a>
