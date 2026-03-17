@@ -112,14 +112,14 @@
   <div class="page" style="padding-top:0; padding-bottom:0;">
     <div class="eyebrow">Maestro -- Mobile App -- Dynamic Trip Page</div>
     <h1>PRD Gap Analysis (Mar 16)</h1>
-    <div class="subtitle">Requirements gaps, inconsistencies, and undefined areas across the Mar 16 PRD, Mar 13 engineering meeting, and PRD Analysis Tool</div>
-    <div class="meta">Prepared: March 16, 2026 -- Analyst: Mishal Chowdhury -- Sources: PRD (Mar 16), Engineering Meeting (Mar 13), PRD Analysis Tool (data.js)</div>
+    <div class="subtitle">Requirements gaps, inconsistencies, and undefined areas across the Mar 16 PRD, Mar 13 engineering meeting, Mar 16 estimation meeting, and PRD Analysis Tool</div>
+    <div class="meta">Prepared: March 16, 2026 (updated post-Mar 16 meeting) -- Analyst: Mishal Chowdhury -- Sources: PRD (Mar 16), Engineering Meeting (Mar 13), Estimation Meeting (Mar 16), PRD Analysis Tool (data.js)</div>
   </div>
 </div>
 
 <!-- Summary -->
 <div class="summary-bar">
-  <div class="stat total"><div class="num">14</div><div class="label">Total Gaps</div></div>
+  <div class="stat total"><div class="num">19</div><div class="label">Total Gaps</div></div>
   <div class="stat critical"><div class="num">4</div><div class="label">Critical</div></div>
   <div class="stat high"><div class="num">5</div><div class="label">High Priority</div></div>
   <div class="stat medium"><div class="num">5</div><div class="label">Medium / Low</div></div>
@@ -142,6 +142,7 @@
     <span class="key-label">Source tags:</span>
     <span class="tag tag-prd">PRD</span>
     <span class="tag tag-meeting">Mar 13 Meeting</span>
+    <span class="tag tag-meeting">Mar 16 Meeting</span>
     <span class="tag tag-tool">Analysis Tool</span>
     <span class="tag tag-absent">Absent from all sources</span>
   </div>
@@ -189,22 +190,22 @@
       <div class="gap-card-header">
         <span class="gap-id critical">G2</span>
         <div>
-          <div class="gap-title">Comments Model Inconsistency -- PRD Contradicts Itself</div>
-          <div style="margin-top:4px;"><span class="sev sev-critical">Critical</span> <span class="tag tag-prd">PRD</span> <span class="tag tag-meeting">Mar 13 Meeting</span></div>
+          <div class="gap-title">Comments Model Inconsistency -- PRD Contradicts Itself (Updated Mar 16)</div>
+          <div style="margin-top:4px;"><span class="sev sev-critical">Critical</span> <span class="tag tag-prd">PRD</span> <span class="tag tag-meeting">Mar 13 Meeting</span> <span class="tag tag-meeting">Mar 16 Meeting</span></div>
         </div>
       </div>
       <div class="gap-body">
         <div class="gap-field">
           <div class="gap-field-label">Where</div>
-          <div class="gap-field-value">PRD Section 7.2 says <span class="code-inline">"append to Comments JSON array"</span>, implying a JSON-based threaded comment model. However, Section 6.2 defines the data model with two plain text fields: <span class="code-inline">Client Request</span> and <span class="code-inline">Ops Response</span>. The Mar 13 engineering meeting explicitly confirmed the two-text-fields model.</div>
+          <div class="gap-field-value">PRD Section 7.2 says <span class="code-inline">"append to Comments JSON array"</span>, implying a JSON-based threaded comment model. Section 6.2 defines two plain text fields. Mar 13 meeting confirmed text not JSON. <strong>Mar 16 update:</strong> Shashila + Tharaka + Yasiru confirmed comments will be stored in a <span class="code-inline">SEPARATE component_comments table</span> (not fields on the Components DB). Simplified schema: timestamp, text content, author. This further contradicts both PRD approaches.</div>
         </div>
         <div class="gap-field">
           <div class="gap-field-label">Impact</div>
-          <div class="gap-field-value"><strong>Backend devs will build the wrong data model if they follow Section 7.2.</strong> Section 6.2 and the Mar 13 decision both say two text fields -- but Section 7.2 describes JSON array append logic. A developer reading sequentially will hit Section 7.2 first and may implement the wrong pattern before reaching Section 6.2.</div>
+          <div class="gap-field-value"><strong>Three different models now exist across sources:</strong> (1) PRD 7.2: JSON array on Components DB, (2) PRD 6.2 + Mar 13: two text fields on Components DB, (3) Mar 16: separate component_comments table. The Mar 16 decision is the confirmed path forward. PRD must be updated to reflect the separate table approach.</div>
         </div>
         <div class="gap-field">
           <div class="gap-field-label">Owner</div>
-          <div class="gap-field-value"><span class="owner">Sunthar + Tharaka</span> to correct PRD Section 7.2 to match the confirmed two-text-field model</div>
+          <div class="gap-field-value"><span class="owner">Sunthar + Tharaka</span> to correct PRD to match the confirmed separate component_comments table model (Mar 16 decision)</div>
         </div>
       </div>
     </div>
@@ -601,12 +602,151 @@
 
 
   <!-- ============================================================ -->
+  <!-- SECTION 5: MAR 16 MEETING FINDINGS -->
+  <!-- ============================================================ -->
+  <div class="screen-block">
+    <div class="screen-header">
+      <div class="screen-badge" style="background:#14b8a6;">16</div>
+      <div>
+        <h2>Mar 16 Estimation Meeting -- New Findings</h2>
+        <div class="screen-desc">Technical decisions, risks, and process agreements surfaced during the Mar 16 PRD breakdown meeting (Mishal, Shashila, Tharaka, Yasiru, Waruna)</div>
+      </div>
+    </div>
+
+    <!-- G15 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id high">G15</span>
+        <div>
+          <div class="gap-title">Notion API Rate Limiting -- Scaling Risk with Multiple Token Mitigation</div>
+          <div style="margin-top:4px;"><span class="sev sev-high">High</span> <span class="tag tag-meeting">Mar 16 Meeting</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">Shashila confirmed Notion allows only <span class="code-inline">3 requests/sec per integration token</span>. Team discussed mitigation: using 15-20 integration tokens to achieve ~60 req/sec via a custom connection pool and load balancer.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value"><strong>Multiple integration tokens risk Notion account ban.</strong> Notion monitors for bot-like behavior from multiple tokens accessing the same databases. At MVP scale (~50 active trips) this is acceptable, but the scaling approach carries account-level risk. Queue system handles burst by updating MongoDB/Redis instantly and syncing Notion async -- but ~1000 concurrent writes would take ~5 minutes to sync to Notion.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Shashila + Yasiru</span> to validate multiple-token approach against Notion ToS. Document scaling limits for Sunthar/Prahar before production rollout beyond MVP.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G16 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id high">G16</span>
+        <div>
+          <div class="gap-title">Waruna Blocked on Final Figma UI -- Cannot Estimate Mobile Work</div>
+          <div style="margin-top:4px;"><span class="sev sev-high">High</span> <span class="tag tag-meeting">Mar 16 Meeting</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">Waruna stated multiple times during the meeting that he has not received the finalized Figma UI screens. He cannot provide mobile estimates or define preload API data requirements until the final UI is available.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value"><strong>Mobile estimation and implementation start are blocked.</strong> Waruna carries 80-110 pts of Core UI work. Without finalized screens, he plans to start with mock data implementations, but the backend team cannot design preload APIs without knowing what data mobile needs upfront. This delays the coordination between mobile and backend tracks.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Waruna</span> to connect with design on Mar 17 for final UI. Mobile estimates expected by Wed/Thu Mar 19-20.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G17 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id medium">G17</span>
+        <div>
+          <div class="gap-title">Competing Priorities -- Dynamic Trip vs Ops Feedback Track</div>
+          <div style="margin-top:4px;"><span class="sev sev-medium">Medium</span> <span class="tag tag-meeting">Mar 16 Meeting</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">Tharaka flagged that the backend team (Shashila, Tharaka, Yasiru) also has the ops feedback addressing track running in parallel. This was confirmed in the morning standup call prior to the Mar 16 meeting.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value">Backend resource split could slow both tracks. Without an explicit prioritization agreement, engineers may context-switch between two competing workstreams, reducing velocity on both. Tharaka wants to sync with Nirav to agree on resource allocation.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Tharaka + Nirav</span> to agree on resource allocation split for Sprint 9. Dynamic Trip MVP should take priority per the Apr 15 ship date.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G18 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id medium">G18</span>
+        <div>
+          <div class="gap-title">Preload API Strategy -- Open Item Pending UI Review</div>
+          <div style="margin-top:4px;"><span class="sev sev-medium">Medium</span> <span class="tag tag-meeting">Mar 16 Meeting</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">Waruna proposed preloading trip detail data at login and trip list load to achieve Airbnb-like loading speed. Tharaka agreed to keep this as an open API design item. The backend team (Shashila) confirmed cache + Redis architecture can support this, but the exact payload needs to be defined by the mobile team.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value">Without preloading, users will experience noticeable loading delays navigating to the trip detail screen. For a luxury travel app competing with Airbnb-level UX, this is a visible quality gap. However, the exact preload data cannot be specified until Waruna reviews the final Figma screens.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Waruna</span> to specify preload data requirements after receiving final UI. <span class="owner">Kalpa + Shashila</span> to implement the preload API. Tracked as P2.9 in analysis tool.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- G19 -->
+    <div class="gap-card">
+      <div class="gap-card-header">
+        <span class="gap-id medium">G19</span>
+        <div>
+          <div class="gap-title">Real-Time Update Mechanism -- Expo Push vs WebSocket</div>
+          <div style="margin-top:4px;"><span class="sev sev-medium">Medium</span> <span class="tag tag-meeting">Mar 16 Meeting</span></div>
+        </div>
+      </div>
+      <div class="gap-body">
+        <div class="gap-field">
+          <div class="gap-field-label">Where</div>
+          <div class="gap-field-value">Shashila asked about WebSocket for real-time updates. Waruna clarified mobile uses <span class="code-inline">Expo push (silent notifications)</span> with a pub/sub topic pattern, not WebSocket. The team agreed to discuss further if needed, but current approach is sufficient. Only flight validation currently uses real-time updates in the app.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Impact</div>
+          <div class="gap-field-value">The PRD does not specify which real-time mechanism to use. The Mar 16 meeting clarified this informally, but there is no documented decision. If a developer reads the PRD, they may assume WebSocket or pusher. This should be documented in the PRD or tech spec.</div>
+        </div>
+        <div class="gap-field">
+          <div class="gap-field-label">Owner</div>
+          <div class="gap-field-value"><span class="owner">Waruna + Shashila</span> to finalize and document the real-time update approach. Expo push silent notifications as the baseline. Evaluate alternatives if trip component updates require more granular real-time behavior.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================ -->
   <!-- FOOTER -->
   <!-- ============================================================ -->
   <div class="doc-footer">
     <h3>Document Information</h3>
     <p><span class="footer-label">Date:</span> March 16, 2026</p>
-    <p><span class="footer-label">Sources:</span> Mar 16 PRD (Sunthar Premakumar) + Mar 13 Engineering Meeting Transcript + PRD Analysis Tool (data.js, updated Mar 14)</p>
+    <p><span class="footer-label">Sources:</span> Mar 16 PRD (Sunthar Premakumar) + Mar 13 Engineering Meeting Transcript + Mar 16 Estimation Meeting Transcript + PRD Analysis Tool (data.js, updated Mar 16)</p>
     <p><span class="footer-label">Prepared by:</span> Mishal Chowdhury, Business Analyst</p>
     <p style="margin-top:12px; padding-top:12px; border-top:1px solid #ffffff18;">
       <span class="footer-label">Next Step:</span> Review with Sunthar and Nirav before Sprint 9 kickoff. Critical gaps (G1-G4) should be resolved or have owners confirmed before development begins. High-priority gaps (G5-G9) should have resolution plans within the first 3 days of Sprint 9. PRD vs Analysis Tool discrepancies require an explicit scope decision: label features as MVP or Fast-Follow in the PRD itself.

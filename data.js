@@ -1,5 +1,11 @@
 // data.js -- All ticket/team/timeline data + localStorage persistence
 // Shared across all pages. Editor writes here, all pages read.
+//
+// Project Tracks (Mar 16 meeting - Shashila):
+//   1. Mobile Application (Waruna, Kalpa)
+//   2. Command Center + Notion API project (Shashila, Tharaka, Yasiru, Pasindu)
+//   3. Notion DB setup (schema creation, integration tokens, database cloning)
+// Grouping below is feature-centric (prereq/core/fast-follow/design-gap) for planning purposes.
 
 const STORAGE_KEY = 'prd-analysis-data';
 
@@ -14,6 +20,9 @@ const DEFAULT_DATA = {
     prdUrl: "https://www.notion.so/322d1ecb2189813ba114d197694f5249",
     figmaFileKey: "4iE0xDHDUxCIHQ3E55zu5p",
     figmaBaseUrl: "https://www.figma.com/design/4iE0xDHDUxCIHQ3E55zu5p/Maestro-%7C-Product",
+    estimatesStatus: "placeholder-llm",
+    estimatesNote: "LLM-generated rough estimates. Team estimates expected by Thu Mar 18. Waruna (mobile) + Shashila/Tharaka/Yasiru (backend/CC/Notion).",
+    mvpPhase1Note: "MVP Phase 1 = read-only component display (show trip components). Interactive actions (approve/decline) are Phase 2 within MVP. Confirmed Mar 16 by Shashila.",
   },
 
   // -- Team --
@@ -25,6 +34,7 @@ const DEFAULT_DATA = {
     { id: "tharaka", name: "Tharaka", short: "Tharaka", role: "Software Architect", focus: "System architecture, technical design review", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 0, pointsMax: 0, weeklyCapacity: 40, isBottleneck: false, color: "#6366f1" },
     { id: "thiranjaya", name: "Thiranjaya Munasinghe", short: "Thiranjaya", role: "Validation Backend / Flight Module", focus: "Award flight pipeline integration for trip component cards (P2.8), validation backend", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 3, pointsMax: 5, weeklyCapacity: 40, isBottleneck: false, color: "#f97316" },
     { id: "thilini", name: "Thilini", short: "Thilini", role: "QA", focus: "All parent tickets -- reproduce / validate", location: "TBD", tz: "TBD", pointsMin: 0, pointsMax: 0, weeklyCapacity: 40, isBottleneck: false, color: "#ec4899" },
+    { id: "pasindu", name: "Pasindu", short: "Pasindu", role: "Backend Developer", focus: "Backend architecture, Notion API integration", location: "Sri Lanka", tz: "GMT+5:30", pointsMin: 0, pointsMax: 0, weeklyCapacity: 40, isBottleneck: false, color: "#14b8a6" },
   ],
 
   // -- Sprints --
@@ -59,12 +69,13 @@ const DEFAULT_DATA = {
       subIssues: [
         { id: "P1.1", title: "Add Trip Page Type, Cover Image URL, feedback fields to Trips DB", assignee: "shashila", pointsMin: 2, pointsMax: 4, prdRef: { section: "Section 6.1 - Trips Database New Fields", excerpt: "Trip Page Type select: Structured / Notion Embedded / Custom" } },
         { id: "P1.2", title: "Add Insider Tips rich text fields to Trips DB", assignee: "shashila", pointsMin: 1, pointsMax: 2, prdRef: { section: "Section 4.9 - Insider Tips", excerpt: "Stored as rich text fields on Trips Database: Transportation, Money & Connectivity, Culture & Etiquette, Packing & Prep" } },
-        { id: "P1.3", title: "Add Image URLs, Advisor Reasoning, Client Request + Ops Response (text), Option Group, Key Time, Display Order, Website URL, decision fields to Components DB", assignee: "shashila", pointsMin: 3, pointsMax: 4, prdRef: { section: "Section 6.2 - Components Database New Fields", excerpt: "Image URLs (text), Advisor Reasoning (rich text), Client Request (text), Ops Response (text) [NOT JSON - confirmed Mar 13], Display Order (number), Option Group (text), Client Decision Date, Decided By, Key Time, Website URL" } },
+        { id: "P1.3", title: "Add Image URLs, Advisor Reasoning, Option Group, Key Time, Display Order, Website URL, decision fields to Components DB", assignee: "shashila", pointsMin: 3, pointsMax: 4, prdRef: { section: "Section 6.2 - Components Database New Fields", excerpt: "Image URLs (text), Advisor Reasoning (rich text), Display Order (number), Option Group (text), Client Decision Date, Decided By, Key Time, Website URL. Note: Client Request + Ops Response moved to separate component_comments table (Mar 16 meeting)." } },
+        { id: "P1.4", title: "Create component_comments table schema (separate from Components DB)", assignee: "shashila", pointsMin: 2, pointsMax: 4, prdRef: { section: "Mar 16 Meeting", excerpt: "Separate component_comments table with reduced fields: timestamp, text content, author (who replied). Replaces client_requests/ops_response text fields on Components DB." } },
       ]
     },
     {
       id: "P2", group: "prereq", title: "Backend API Layer",
-      description: "Build all 6 REST endpoints per PRD Section 7.2",
+      description: "Build all 6 REST endpoints per PRD Section 7.2. Architecture (Mar 16): Mobile hits Redis cache -> MongoDB -> Notion (async queue sync). Real-time updates via Expo push silent notifications. Preload API TBD based on Waruna's UI review.",
       assignee: "kalpa", qaAssignee: "thilini",
       pointsMin: 24, pointsMax: 32, isMvp: true,
       ganttStart: "2026-03-19", ganttEnd: "2026-04-04",
@@ -81,6 +92,7 @@ const DEFAULT_DATA = {
         { id: "P2.6", title: "GET /trips - Trip list for authenticated member", assignee: "kalpa", pointsMin: 2, pointsMax: 3, prdRef: { section: "Section 7.2", excerpt: "Trip list for authenticated member" } },
         { id: "P2.7", title: "Notion Task Dashboard auto-create integration", assignee: "kalpa", pointsMin: 4, pointsMax: 4, prdRef: { section: "Section 7.9", excerpt: "Every member action auto-creates a task in Notion Task Dashboard. Deduplication: same component within 5 min = single task." } },
         { id: "P2.8", title: "Award flight data pipeline spec — integration with Thiranjaya + Andy", assignee: "thiranjaya", pointsMin: 3, pointsMax: 5, prdRef: { section: "Section 4.3 + 4.4", excerpt: "Mar 13 meeting: Thiranjaya + Andy to determine how validated award flight data populates trip component cards automatically. Ops manual entry is MVP fallback." } },
+        { id: "P2.9", title: "Preload API -- prefetch trip detail data at login + trip list load (TBD based on mobile UI review)", assignee: "kalpa", pointsMin: 0, pointsMax: 0, prdRef: { section: "Mar 16 Meeting", excerpt: "Waruna proposed preloading data at login/trip list load for Airbnb-like speed. Tharaka agreed to keep open. Details TBD once final Figma screens received." } },
       ]
     },
     {
@@ -209,7 +221,7 @@ const DEFAULT_DATA = {
     // === FAST-FOLLOW ===
     {
       id: "F1", group: "fast-follow", title: "Component Comments",
-      description: "Text-based request/response model per Mar 13 meeting clarification. client_requests (text) stores member change request; ops_response (text) stores ops reply. Both render in the Request Changes view. NOT a JSON array as originally specced in PRD Section 4.5.",
+      description: "Component comments stored in a SEPARATE component_comments table (not fields on Components DB, not JSON). Simplified schema: timestamp, text content, author. Confirmed Mar 13 (text not JSON) and Mar 16 (separate table with reduced fields). Renders in Request Changes view.",
       assignee: "waruna", qaAssignee: "thilini",
       pointsMin: 16, pointsMax: 22, isMvp: false,
       ganttStart: "2026-04-16", ganttEnd: "2026-04-28",
@@ -313,10 +325,12 @@ const DEFAULT_DATA = {
   risks: [
     { id: "R1", title: "G3 Full Design Pass blocks all Core UI", severity: "critical", likelihood: "high", impact: "G3 (Full Design Pass) is owned by Waruna who also holds 80-110 pts of Core UI work. Design deliverables must land before C1-C5 can start -- compresses Waruna's effective build window to ~3 weeks.", mitigation: "Prioritise G1-G3 in Sprint 9. Waruna builds from existing prototype screens as interim fallback if full Figma pass is delayed." },
     { id: "R2", title: "Waruna is single-threaded bottleneck", severity: "high", likelihood: "medium", impact: "80-110 points assigned to one person across 5 weeks = 16-22 pts/week. At 1pt = 1hr, this is at or above 40hr/week capacity.", mitigation: "Strict prioritization. C3 (Itinerary & Cards) is largest -- start first. Defer F1/F2/F4 fast-follows if behind." },
-    { id: "R3", title: "Notion API rate limits under load", severity: "medium", likelihood: "low", impact: "3 req/sec limit. Task auto-creation + component reads could bottleneck during active user sessions.", mitigation: "PRD plans Redis/Postgres read-replica cache for V1.5. V1 acceptable at ~50 active trips." },
+    { id: "R3", title: "Notion API rate limits under load", severity: "high", likelihood: "medium", impact: "3 req/sec per integration token. With queue system, ~5 min to process 1000 requests. Mitigation via multiple tokens (15-20 = ~60 req/sec) carries risk of Notion account ban for bot detection. Mar 16: Shashila confirmed queue-based async sync approach.", mitigation: "Queue system for burst handling. MongoDB + Redis cache for instant client-side updates (Notion sync happens async in background). Multiple integration tokens as scaling option (risk: account flagging by Notion). Acceptable at MVP scale (~50 active trips)." },
     { id: "R4", title: "PRD scope creep mid-sprint", severity: "medium", likelihood: "medium", impact: "PRD changed Mar 5→Mar 9 (countdown timer removed, comment model restructured). Mar 13 meeting further corrected comment model (text not JSON). Further unmanaged changes add rework.", mitigation: "Lock PRD scope for Core features by Sprint 9 start (Mar 16). Sunthar confirmed: 'as you're breaking it up into tickets, ping me and we'll talk about it.' Change control for additions post-lock." },
     { id: "R5", title: "Cross-timezone coordination", severity: "low", likelihood: "high", impact: "Waruna (GMT-6) and Kalpa/Shashila (GMT+5:30) have 11.5-hour gap. Blockers discovered at end of Waruna's day wait 12+ hours for response.", mitigation: "Async handoff notes in Linear. 30-min overlap window at start of Waruna's day for sync." },
     { id: "R6", title: "Award flight automation dependency unresolved", severity: "medium", likelihood: "medium", impact: "How validated award flight data populates trip component cards automatically has no spec. Depends on Thiranjaya + Andy pipeline design. If delayed, flight cards must be entered manually by ops.", mitigation: "Ops manual entry is valid MVP fallback. Spike with Thiranjaya + Andy in Sprint 9 to scope automation path. Track as P2.8." },
+    { id: "R7", title: "Competing priorities: Dynamic Trip vs Ops Feedback track", severity: "medium", likelihood: "high", impact: "Backend team (Shashila, Tharaka, Yasiru) also assigned to ops feedback addressing track. Resource split could slow both tracks. Tharaka flagged need to sync with Nirav on prioritization (Mar 16 meeting).", mitigation: "Sync with Nirav to prioritize both tracks. Agree on resource allocation split for Sprint 9. Dynamic Trip MVP takes priority per ship date." },
+    { id: "R8", title: "Waruna blocked on final Figma UI designs", severity: "high", likelihood: "high", impact: "Waruna cannot provide mobile estimates or specify preload API requirements until finalized Figma screens are received. Delays estimation timeline and mobile implementation start.", mitigation: "Waruna to connect with design on Mar 17 to get final UI. Mobile estimates expected by Wed/Thu Mar 19-20." },
   ],
 
   // -- Computed (populated on load) --
